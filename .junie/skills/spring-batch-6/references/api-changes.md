@@ -16,6 +16,7 @@ or need to understand the JobLauncher → JobOperator / JobExplorer → JobRepos
 7. [New graceful shutdown](#7-new-graceful-shutdown)
 8. [New remote step execution](#8-new-remote-step-execution)
 9. [Lambda-style reader/writer configuration (RC2+)](#9-lambda-style-readerwriter-configuration)
+10. [JobLauncherTestUtils deprecated](#10-joblaunche)
 
 ---
 
@@ -259,3 +260,149 @@ public ObservationRegistry observationRegistry(MeterRegistry meterRegistry) {
 ```
 
 Without this bean, batch metrics will **not** be collected.
+
+---
+
+## 10. JobLauncherTestUtils -> JobOperatorTestUtils
+
+### Migrating from JobLauncherTestUtils to JobOperatorTestUtils
+
+Spring Batch 6.0 deprecates `JobLauncherTestUtils` in favor of `JobOperatorTestUtils`, with removal scheduled for 6.2. This follows the broader consolidation where `JobOperator` now extends `JobLauncher` — the test utilities mirror that change.
+
+### Method mapping
+
+| `JobLauncherTestUtils` (deprecated) | `JobOperatorTestUtils` (6.x) |
+|---|---|
+| `launchJob()` | `startJob()` |
+| `launchJob(JobParameters)` | `startJob(JobParameters)` |
+| `launchStep(String)` | `startStep(String)` |
+| `launchStep(String, JobParameters, ExecutionContext)` | `startStep(String, JobParameters, ExecutionContext)` |
+| `setJobLauncher(JobLauncher)` | `setJobOperator(JobOperator)` |
+| `getJobLauncher()` | `getJobOperator()` |
+| `getUniqueJobParametersBuilder()` | `getUniqueJobParametersBuilder()` *(unchanged)* |
+| `setJob(Job)` | `setJob(Job)` *(unchanged)* |
+| `getJob()` | `getJob()` *(unchanged)* |
+| `setJobRepository(JobRepository)` | `setJobRepository(JobRepository)` *(unchanged)* |
+| `getJobRepository()` | `getJobRepository()` *(unchanged)* |
+
+The rename pattern is consistent: `launch*` → `start*`, `*Launcher*` → `*Operator*`.
+
+### Step 1 — Update the autowired field
+
+```java
+// Before (5.x)
+@Autowired
+private JobLauncherTestUtils jobLauncherTestUtils;
+
+// After (6.x)
+@Autowired
+private JobOperatorTestUtils jobOperatorTestUtils;
+```
+
+The `@SpringBatchTest` annotation registers `JobOperatorTestUtils` automatically — no extra bean definition needed.
+
+### Step 2 — Rename method calls
+
+Replace every `launchJob` / `launchStep` call with `startJob` / `startStep`:
+
+```java
+// Before
+JobExecution execution = jobLauncherTestUtils.launchJob();
+JobExecution stepExecution = jobLauncherTestUtils.launchStep("importStep");
+
+// After
+JobExecution execution = jobOperatorTestUtils.startJob();
+JobExecution stepExecution = jobOperatorTestUtils.startStep("importStep");
+```
+
+Parameters and return types are identical.
+
+### Step 3 — Update imports
+
+```java
+// Before
+import org.springframework.batch.test.JobLauncherTestUtils;
+
+// After
+import org.springframework.batch.test.JobOperatorTestUtils;
+```
+
+### Full test example
+
+```java
+@SpringBatchTest
+@SpringBootTest
+@TestPropertySource(properties = "spring.batch.job.enabled=false")
+class ImportJobTest {
+
+    @Autowired
+    private JobOperatorTestUtils jobOperatorTestUtils;
+
+    @Autowired
+    private Job importJob;
+
+    @Test
+    void fullJobCompletes() throws Exception {
+        jobOperatorTestUtils.setJob(importJob);
+
+        JobParameters params = new JobParametersBuilder()
+                .addString("inputFile", "/data/customers.csv")
+                .addLocalDate("runDate", LocalDate.now())
+                .toJobParameters();
+
+        JobExecution execution = jobOperatorTestUtils.startJob(params);
+
+        assertThat(execution.getExitStatus().getExitCode())
+                .isEqualTo("COMPLETED");
+    }
+
+    @Test
+    void singleStepCompletes() throws Exception {
+        jobOperatorTestUtils.setJob(importJob);
+
+        JobExecution execution = jobOperatorTestUtils.startStep("transformStep");
+
+        assertThat(execution.getExitStatus().getExitCode())
+                .isEqualTo("COMPLETED");
+    }
+}
+```
+
+### Known issue: multiple jobs in one test class
+
+There is a known issue ([spring-batch#5118](https://github.com/spring-projects/spring-batch/issues/5118)) where calling `setJob()` with a different job in the same Spring context and then using the no-arg `startJob()` fails with `JobInstanceAlreadyCompleteException`. The internally generated random parameter gets cached across `setJob()` calls.
+
+**Workaround:** always supply your own unique parameters instead of relying on the auto-generated ones:
+
+```java
+@Test
+void testJobA() throws Exception {
+    jobOperatorTestUtils.setJob(jobA);
+    JobParameters params = new JobParametersBuilder()
+            .addString("runId", UUID.randomUUID().toString())
+            .toJobParameters();
+    jobOperatorTestUtils.startJob(params);
+}
+
+@Test
+void testJobB() throws Exception {
+    jobOperatorTestUtils.setJob(jobB);
+    JobParameters params = new JobParametersBuilder()
+            .addString("runId", UUID.randomUUID().toString())
+            .toJobParameters();
+    jobOperatorTestUtils.startJob(params);
+}
+```
+
+### Quick search-and-replace checklist
+
+Run these replacements across your test sources:
+
+1. `JobLauncherTestUtils` → `JobOperatorTestUtils`
+2. `jobLauncherTestUtils` → `jobOperatorTestUtils` (field names)
+3. `.launchJob(` → `.startJob(`
+4. `.launchStep(` → `.startStep(`
+5. `.setJobLauncher(` → `.setJobOperator(`
+6. `.getJobLauncher()` → `.getJobOperator()`
+7. `import org.springframework.batch.test.JobLauncherTestUtils` → `import org.springframework.batch.test.JobOperatorTestUtils` 
+

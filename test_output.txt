@@ -1,0 +1,338 @@
+Initialized native services in: /Users/anton/.gradle/native
+Initialized jansi services in: /Users/anton/.gradle/native
+Found daemon DaemonInfo{pid=2134, address=[e7ba3190-8abb-418a-a181-d4fe306430cd port:57228, addresses:[/127.0.0.1]], state=Idle, lastBusy=1776462078125, context=DefaultDaemonContext[uid=221fcd38-0d46-45ba-9471-3791685be731,javaHome=/Users/anton/Library/Java/JavaVirtualMachines/corretto-21.0.5/Contents/Home,javaVersion=21,javaVendor=Amazon.com Inc.,daemonRegistryDir=/Users/anton/.gradle/daemon,pid=2134,idleTimeout=10800000,priority=NORMAL,applyInstrumentationAgent=true,nativeServicesMode=ENABLED,daemonOpts=-XX:MaxMetaspaceSize=384m,-XX:+HeapDumpOnOutOfMemoryError,-Xms256m,-Xmx512m,-Dfile.encoding=UTF-8,-Duser.country=EE,-Duser.language=en,-Duser.variant]} however its context does not match the desired criteria.
+JVM is incompatible.
+Wanted: DaemonRequestContext{jvmCriteria=/Users/anton/.sdkman/candidates/java/25.0.1-amzn (no Daemon JVM specified, using current Java home), daemonOpts=[-XX:MaxMetaspaceSize=384m, -XX:+HeapDumpOnOutOfMemoryError, -Xms256m, -Xmx512m, -Dfile.encoding=UTF-8, -Duser.country=EE, -Duser.language=en, -Duser.variant], applyInstrumentationAgent=true, nativeServicesMode=ENABLED, priority=NORMAL}
+Actual: DefaultDaemonContext[uid=221fcd38-0d46-45ba-9471-3791685be731,javaHome=/Users/anton/Library/Java/JavaVirtualMachines/corretto-21.0.5/Contents/Home,javaVersion=21,javaVendor=Amazon.com Inc.,daemonRegistryDir=/Users/anton/.gradle/daemon,pid=2134,idleTimeout=10800000,priority=NORMAL,applyInstrumentationAgent=true,nativeServicesMode=ENABLED,daemonOpts=-XX:MaxMetaspaceSize=384m,-XX:+HeapDumpOnOutOfMemoryError,-Xms256m,-Xmx512m,-Dfile.encoding=UTF-8,-Duser.country=EE,-Duser.language=en,-Duser.variant]
+
+  Looking for a different daemon...
+The client will now receive all logging from the daemon (pid: 1430). The daemon log file: /Users/anton/.gradle/daemon/9.4.1/daemon-1430.out.log
+Starting 16th build in daemon [uptime: 28 mins 59.623 secs, performance: 100%, GC rate: 0.00/s, heap usage: 0% of 512 MiB, non-heap usage: 17% of 384 MiB]
+Using 14 worker leases.
+Operational build model parameters: {cachingModelBuilding=false, configurationCache=false, configurationCacheDisabledReason=null, configurationCacheParallelLoad=false, configurationCacheParallelStore=false, configureOnDemand=false, invalidateCoupledProjects=false, isolatedProjects=false, modelAsProjectDependency=false, modelBuilding=false, parallelModelBuilding=false, parallelProjectConfiguration=false, parallelProjectExecution=false, resilientModelBuilding=false}
+Invalidating in-memory cache of /Users/anton/IdeaProjects/sdd-demo/.gradle/9.4.1/fileHashes/fileHashes.bin
+Invalidating in-memory cache of /Users/anton/IdeaProjects/sdd-demo/.gradle/buildOutputCleanup/outputFiles.bin
+Invalidating in-memory cache of /Users/anton/IdeaProjects/sdd-demo/.gradle/9.4.1/fileHashes/resourceHashesCache.bin
+Now considering [/Users/anton/IdeaProjects/sdd-demo] as hierarchies to watch
+Watching the file system is configured to be enabled if available
+File system watching is active
+Starting Build
+Settings evaluated using settings file '/Users/anton/IdeaProjects/sdd-demo/settings.gradle'.
+Projects loaded. Root project using build file '/Users/anton/IdeaProjects/sdd-demo/build.gradle'.
+Included projects: [root project 'sdd-demo']
+
+> Configure project :
+Evaluating root project 'sdd-demo' using build file '/Users/anton/IdeaProjects/sdd-demo/build.gradle'.
+Resolved plugin [id: 'java']
+Resolved plugin [id: 'org.springframework.boot', version: '4.0.5']
+Resolved plugin [id: 'io.spring.dependency-management', version: '1.1.7']
+Invalidating in-memory cache of /Users/anton/.gradle/caches/journal-1/file-access.bin
+Invalidating in-memory cache of /Users/anton/.gradle/caches/9.4.1/fileHashes/fileHashes.bin
+Invalidating in-memory cache of /Users/anton/.gradle/caches/9.4.1/fileHashes/resourceHashesCache.bin
+Applying dependency management to configuration 'annotationProcessor' in project 'sdd-demo'
+Applying dependency management to configuration 'apiElements' in project 'sdd-demo'
+Applying dependency management to configuration 'archives' in project 'sdd-demo'
+Applying dependency management to configuration 'bootArchives' in project 'sdd-demo'
+Applying dependency management to configuration 'compileClasspath' in project 'sdd-demo'
+Applying dependency management to configuration 'compileOnly' in project 'sdd-demo'
+Applying dependency management to configuration 'default' in project 'sdd-demo'
+Applying dependency management to configuration 'developmentOnly' in project 'sdd-demo'
+Applying dependency management to configuration 'implementation' in project 'sdd-demo'
+Applying dependency management to configuration 'mainSourceElements' in project 'sdd-demo'
+Applying dependency management to configuration 'productionRuntimeClasspath' in project 'sdd-demo'
+Applying dependency management to configuration 'runtimeClasspath' in project 'sdd-demo'
+Applying dependency management to configuration 'runtimeElements' in project 'sdd-demo'
+Applying dependency management to configuration 'runtimeOnly' in project 'sdd-demo'
+Applying dependency management to configuration 'testAndDevelopmentOnly' in project 'sdd-demo'
+Applying dependency management to configuration 'testAnnotationProcessor' in project 'sdd-demo'
+Applying dependency management to configuration 'testCompileClasspath' in project 'sdd-demo'
+Applying dependency management to configuration 'testCompileOnly' in project 'sdd-demo'
+Applying dependency management to configuration 'testImplementation' in project 'sdd-demo'
+Applying dependency management to configuration 'testResultsElementsForTest' in project 'sdd-demo'
+Applying dependency management to configuration 'testRuntimeClasspath' in project 'sdd-demo'
+Applying dependency management to configuration 'testRuntimeOnly' in project 'sdd-demo'
+All projects evaluated.
+Task name matched 'test'
+Selected primary task 'test' from project :
+Starting process 'command '/usr/libexec/java_home''. Working directory: /Users/anton/.gradle/daemon/9.4.1 Command: /usr/libexec/java_home -V
+Successfully started process 'command '/usr/libexec/java_home''
+Resolving global dependency management for project 'sdd-demo'
+Excluding [com.google.protobuf:protobuf-java]
+Excluding []
+Excluding []
+Excluding []
+Excluding []
+Excluding []
+Tasks to be executed: [task ':compileJava', task ':processResources', task ':classes', task ':compileTestJava', task ':processTestResources', task ':testClasses', task ':test']
+Tasks that were excluded: []
+Resolve mutations for :compileJava (Thread[#1044,Execution worker Thread 12,5,main]) started.
+:compileJava (Thread[#1044,Execution worker Thread 12,5,main]) started.
+Invalidating in-memory cache of /Users/anton/IdeaProjects/sdd-demo/.gradle/9.4.1/executionHistory/executionHistory.bin
+
+> Task :compileJava UP-TO-DATE
+Custom actions are attached to task ':compileJava'.
+Caching disabled for task ':compileJava' because:
+  Build cache is disabled
+Skipping task ':compileJava' as it is up-to-date.
+Resolve mutations for :processResources (Thread[#1032,included builds,5,main]) started.
+:processResources (Thread[#1032,included builds,5,main]) started.
+
+> Task :processResources UP-TO-DATE
+Caching disabled for task ':processResources' because:
+  Build cache is disabled
+  Not worth caching
+Skipping task ':processResources' as it is up-to-date.
+Resolve mutations for :classes (Thread[#1032,included builds,5,main]) started.
+:classes (Thread[#1032,included builds,5,main]) started.
+
+> Task :classes UP-TO-DATE
+Skipping task ':classes' as it has no actions.
+Resolve mutations for :compileTestJava (Thread[#1032,included builds,5,main]) started.
+:compileTestJava (Thread[#1032,included builds,5,main]) started.
+
+> Task :compileTestJava UP-TO-DATE
+Custom actions are attached to task ':compileTestJava'.
+Caching disabled for task ':compileTestJava' because:
+  Build cache is disabled
+Skipping task ':compileTestJava' as it is up-to-date.
+Resolve mutations for :processTestResources (Thread[#1035,Execution worker Thread 3,5,main]) started.
+:processTestResources (Thread[#1035,Execution worker Thread 3,5,main]) started.
+
+> Task :processTestResources NO-SOURCE
+Skipping task ':processTestResources' as it has no source files and no previous output files.
+Resolve mutations for :testClasses (Thread[#1032,included builds,5,main]) started.
+:testClasses (Thread[#1032,included builds,5,main]) started.
+
+> Task :testClasses UP-TO-DATE
+Skipping task ':testClasses' as it has no actions.
+Resolve mutations for :test (Thread[#1032,included builds,5,main]) started.
+:test (Thread[#1032,included builds,5,main]) started.
+Gradle Test Executor 10 started executing tests.
+
+> Task :test
+Caching disabled for task ':test' because:
+  Build cache is disabled
+Task ':test' is not up-to-date because:
+  Task has failed previously.
+Starting process 'Gradle Test Executor 10'. Working directory: /Users/anton/IdeaProjects/sdd-demo Command: /Users/anton/.sdkman/candidates/java/21.0.3-tem/bin/java -Dorg.gradle.internal.worker.tmpdir=/Users/anton/IdeaProjects/sdd-demo/build/tmp/test/work @/Users/anton/.gradle/.tmp/gradle-worker-classpath858636974280900896txt -Xmx512m -Dfile.encoding=UTF-8 -Duser.country=EE -Duser.language=en -Duser.variant -ea worker.org.gradle.process.internal.worker.GradleWorkerMain 'Gradle Test Executor 10'
+Successfully started process 'Gradle Test Executor 10'
+
+MissingDirectoryIntegrationTest STANDARD_OUT
+    00:41:38.007 [Test worker] INFO org.testcontainers.images.PullPolicy -- Image pull policy will be performed by: DefaultPullPolicy()
+    00:41:38.023 [Test worker] INFO org.testcontainers.utility.ImageNameSubstitutor -- Image name substitution will be performed by: DefaultImageNameSubstitutor (composite of 'ConfigurationFileImageNameSubstitutor' and 'PrefixingImageNameSubstitutor')
+    00:41:38.069 [Test worker] INFO org.testcontainers.DockerClientFactory -- Testcontainers version: 2.0.4
+    00:41:39.039 [Test worker] INFO org.testcontainers.dockerclient.DockerClientProviderStrategy -- Found Docker environment with Environment variables, system properties and defaults. Resolved dockerHost=unix:///Users/anton/.docker/run/docker.sock
+    00:41:39.044 [Test worker] INFO org.testcontainers.DockerClientFactory -- Docker host IP address is localhost
+    00:41:39.078 [Test worker] INFO org.testcontainers.DockerClientFactory -- Connected to docker: 
+      Server Version: 29.1.5
+      API Version: 1.52
+      Operating System: Docker Desktop
+      Total Memory: 7836 MB
+      Labels: 
+        com.docker.desktop.address=unix:///Users/anton/Library/Containers/com.docker.docker/Data/docker-cli.sock
+    00:41:39.168 [Test worker] INFO tc.testcontainers/ryuk:0.14.0 -- Creating container for image: testcontainers/ryuk:0.14.0
+    00:41:39.319 [Test worker] INFO org.testcontainers.utility.RegistryAuthLocator -- Credential helper/store (docker-credential-desktop) does not have credentials for https://index.docker.io/v1/
+    00:41:39.510 [Test worker] INFO tc.testcontainers/ryuk:0.14.0 -- Container testcontainers/ryuk:0.14.0 is starting: cedfcc58bbca46b782b0379798d9c04a0505b6dc8b0aa5a4a812105cc10f25fd
+    00:41:40.062 [Test worker] INFO tc.testcontainers/ryuk:0.14.0 -- Container testcontainers/ryuk:0.14.0 started in PT0.894005S
+    00:41:40.088 [Test worker] INFO org.testcontainers.utility.RyukResourceReaper -- Ryuk started - will monitor and terminate Testcontainers containers on JVM exit
+    00:41:40.088 [Test worker] INFO org.testcontainers.DockerClientFactory -- Checking the system...
+    00:41:40.089 [Test worker] INFO org.testcontainers.DockerClientFactory -- ✔︎ Docker server version should be at least 1.6.0
+    00:41:40.106 [Test worker] INFO tc.mysql:8.0 -- Creating container for image: mysql:8.0
+    00:41:40.213 [Test worker] INFO tc.mysql:8.0 -- Container mysql:8.0 is starting: f46e608460b1b96602b776bdb298cdd800ead9d7ea6c71118267cce974cc5517
+    00:41:40.323 [Test worker] INFO tc.mysql:8.0 -- Waiting for database connection to become available at jdbc:mysql://localhost:51653/testdb using query 'SELECT 1'
+    00:41:47.097 [Test worker] INFO tc.mysql:8.0 -- Container mysql:8.0 started in PT6.991412S
+    00:41:47.098 [Test worker] INFO tc.mysql:8.0 -- Container is started (JDBC URL: jdbc:mysql://localhost:51653/testdb)
+    00:41:47.284 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [org.example.sdd.MissingDirectoryIntegrationTest]: MissingDirectoryIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+    00:41:47.503 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration org.example.sdd.Application for test class org.example.sdd.MissingDirectoryIntegrationTest
+    00:41:47.613 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [org.example.sdd.MissingDirectoryIntegrationTest]: MissingDirectoryIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+    00:41:47.614 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [org.example.sdd.AbstractIntegrationTest]: AbstractIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+    00:41:47.625 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration org.example.sdd.Application for test class org.example.sdd.MissingDirectoryIntegrationTest
+
+      .   ____          _            __ _ _
+     /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+    ( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+     \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+      '  |____| .__|_| |_|_| |_\__, | / / / /
+     =========|_|==============|___/=/_/_/_/
+
+     :: Spring Boot ::                (v4.0.5)
+
+    2026-04-18T00:41:48.174+03:00  INFO 5360 --- [sdd-demo] [    Test worker] o.e.sdd.MissingDirectoryIntegrationTest  : Starting MissingDirectoryIntegrationTest using Java 21.0.3 with PID 5360 (started by anton in /Users/anton/IdeaProjects/sdd-demo)
+    2026-04-18T00:41:48.177+03:00  INFO 5360 --- [sdd-demo] [    Test worker] o.e.sdd.MissingDirectoryIntegrationTest  : No active profile set, falling back to 1 default profile: "default"
+    2026-04-18T00:41:50.180+03:00  INFO 5360 --- [sdd-demo] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+    2026-04-18T00:41:50.487+03:00  INFO 5360 --- [sdd-demo] [    Test worker] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@29174dfe
+    2026-04-18T00:41:50.489+03:00  INFO 5360 --- [sdd-demo] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+    2026-04-18T00:41:50.545+03:00  INFO 5360 --- [sdd-demo] [    Test worker] org.flywaydb.core.FlywayExecutor         : Database: jdbc:mysql://localhost:51653/testdb (MySQL 8.0)
+    2026-04-18T00:41:50.929+03:00  INFO 5360 --- [sdd-demo] [    Test worker] o.f.c.i.s.JdbcTableSchemaHistory         : Schema history table `testdb`.`flyway_schema_history` does not exist yet
+    2026-04-18T00:41:50.936+03:00  INFO 5360 --- [sdd-demo] [    Test worker] o.f.core.internal.command.DbValidate     : Successfully validated 1 migration (execution time 00:00.029s)
+    2026-04-18T00:41:50.961+03:00  INFO 5360 --- [sdd-demo] [    Test worker] org.flywaydb.core.Flyway                 : All configured schemas are empty; baseline operation skipped. A baseline or migration script with a lower version than the baseline version may execute if available. Check the Schemas parameter if this is not intended.
+    2026-04-18T00:41:50.967+03:00  INFO 5360 --- [sdd-demo] [    Test worker] o.f.c.i.s.JdbcTableSchemaHistory         : Creating Schema History table `testdb`.`flyway_schema_history` ...
+    2026-04-18T00:41:51.055+03:00  INFO 5360 --- [sdd-demo] [    Test worker] o.f.core.internal.command.DbMigrate      : Current version of schema `testdb`: << Empty Schema >>
+    2026-04-18T00:41:51.073+03:00  INFO 5360 --- [sdd-demo] [    Test worker] o.f.core.internal.command.DbMigrate      : Migrating schema `testdb` to version "1 - create temperature records"
+    2026-04-18T00:41:51.448+03:00  INFO 5360 --- [sdd-demo] [    Test worker] o.f.core.internal.command.DbMigrate      : Successfully applied 1 migration to schema `testdb`, now at version v1 (execution time 00:00.025s)
+    2026-04-18T00:41:51.975+03:00  INFO 5360 --- [sdd-demo] [    Test worker] o.e.sdd.MissingDirectoryIntegrationTest  : Started MissingDirectoryIntegrationTest in 4.222 seconds (process running for 15.943)
+
+MissingDirectoryIntegrationTest > testMissingDirectory() STANDARD_ERROR
+    Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build as described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html#0.3
+    WARNING: A Java agent has been loaded dynamically (/Users/anton/.gradle/caches/modules-2/files-2.1/net.bytebuddy/byte-buddy-agent/1.17.8/f09415827a71be7ed621c7bd02550678f28bc81c/byte-buddy-agent-1.17.8.jar)
+    WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+    WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+    WARNING: Dynamic loading of agents will be disallowed by default in a future release
+
+MissingDirectoryIntegrationTest > testMissingDirectory() STANDARD_OUT
+    2026-04-18T00:41:53.030+03:00  INFO 5360 --- [sdd-demo] [    Test worker] o.s.b.c.l.s.TaskExecutorJobLauncher      : Job: [SimpleJob: [name=importTemperatureJob]] launched with the following parameters: [{JobParameter{name='batch.random', value=364733792311474684, type=class java.lang.Long, identifying=true}}]
+    [DEBUG_LOG] beforeJob called with inputDir: non_existent_directory_123
+    2026-04-18T00:41:53.052+03:00 ERROR 5360 --- [sdd-demo] [    Test worker] o.s.batch.core.job.AbstractJob           : Encountered fatal error executing job
+
+    java.lang.RuntimeException: Input directory does not exist: non_existent_directory_123
+    	at org.example.sdd.listener.BatchJobListener.beforeJob(BatchJobListener.java:29) ~[main/:na]
+    	at org.springframework.batch.core.listener.CompositeJobExecutionListener.beforeJob(CompositeJobExecutionListener.java:72) ~[spring-batch-core-6.0.3.jar:6.0.3]
+    	at org.springframework.batch.core.job.AbstractJob.execute(AbstractJob.java:291) ~[spring-batch-core-6.0.3.jar:6.0.3]
+    	at org.springframework.batch.core.launch.support.TaskExecutorJobLauncher$1.run(TaskExecutorJobLauncher.java:220) ~[spring-batch-core-6.0.3.jar:6.0.3]
+    	at org.springframework.core.task.SyncTaskExecutor.execute(SyncTaskExecutor.java:88) ~[spring-core-7.0.6.jar:7.0.6]
+    	at org.springframework.batch.core.launch.support.TaskExecutorJobLauncher.launchJobExecution(TaskExecutorJobLauncher.java:211) ~[spring-batch-core-6.0.3.jar:6.0.3]
+    	at org.springframework.batch.core.launch.support.TaskExecutorJobLauncher.run(TaskExecutorJobLauncher.java:109) ~[spring-batch-core-6.0.3.jar:6.0.3]
+    	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+    	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359) ~[spring-aop-7.0.6.jar:7.0.6]
+    	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:190) ~[spring-aop-7.0.6.jar:7.0.6]
+    	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:158) ~[spring-aop-7.0.6.jar:7.0.6]
+    	at org.springframework.transaction.interceptor.TransactionInterceptor$1.proceedWithInvocation(TransactionInterceptor.java:133) ~[spring-tx-7.0.6.jar:7.0.6]
+    	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:371) ~[spring-tx-7.0.6.jar:7.0.6]
+    	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:130) ~[spring-tx-7.0.6.jar:7.0.6]
+    	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179) ~[spring-aop-7.0.6.jar:7.0.6]
+    	at org.springframework.aop.framework.JdkDynamicAopProxy.invoke(JdkDynamicAopProxy.java:222) ~[spring-aop-7.0.6.jar:7.0.6]
+    	at jdk.proxy3/jdk.proxy3.$Proxy103.run(Unknown Source) ~[na:na]
+    	at org.springframework.batch.test.JobLauncherTestUtils.launchJob(JobLauncherTestUtils.java:158) ~[spring-batch-test-6.0.3.jar:6.0.3]
+    	at org.springframework.batch.test.JobLauncherTestUtils.launchJob(JobLauncherTestUtils.java:144) ~[spring-batch-test-6.0.3.jar:6.0.3]
+    	at org.example.sdd.MissingDirectoryIntegrationTest.lambda$testMissingDirectory$1(MissingDirectoryIntegrationTest.java:32) ~[test/:na]
+    	at org.assertj.core.api.ThrowableAssert.catchThrowable(ThrowableAssert.java:66) ~[assertj-core-3.27.7.jar:na]
+    	at org.assertj.core.api.AssertionsForClassTypes.catchThrowable(AssertionsForClassTypes.java:908) ~[assertj-core-3.27.7.jar:na]
+    	at org.assertj.core.api.Assertions.catchThrowable(Assertions.java:1476) ~[assertj-core-3.27.7.jar:na]
+    	at org.assertj.core.api.Assertions.assertThatThrownBy(Assertions.java:1319) ~[assertj-core-3.27.7.jar:na]
+    	at org.example.sdd.MissingDirectoryIntegrationTest.testMissingDirectory(MissingDirectoryIntegrationTest.java:32) ~[test/:na]
+    	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+    	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:701) ~[junit-platform-commons-6.0.3.jar:6.0.3]
+    	at org.junit.platform.commons.support.ReflectionSupport.invokeMethod(ReflectionSupport.java:502) ~[junit-platform-commons-6.0.3.jar:6.0.3]
+    	at org.junit.jupiter.engine.support.MethodReflectionUtils.invoke(MethodReflectionUtils.java:45) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+    	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:61) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+    	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:124) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+    	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:163) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+    	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:148) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+    	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:86) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+    	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:123) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+    	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:105) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+    	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:99) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+    	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:66) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+    	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:47) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+    	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:39) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+    	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:104) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+    	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:98) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+    	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invokeVoid(InterceptingExecutableInvoker.java:71) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+    	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$0(TestMethodTestDescriptor.java:219) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+    	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+    	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:215) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+    	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:157) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+    	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:70) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:176) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+    	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+    	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+    	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596) ~[na:na]
+    	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:42) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:180) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+    	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+    	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+    	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596) ~[na:na]
+    	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:42) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:180) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+    	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+    	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+    	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+    	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:36) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+    	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:52) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+    	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:58) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+    	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.executeEngine(EngineExecutionOrchestrator.java:246) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+    	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.failOrExecuteEngine(EngineExecutionOrchestrator.java:218) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+    	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:179) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+    	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:108) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+    	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:66) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+    	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:157) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+    	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:65) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+    	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:125) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+    	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:114) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+    	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:93) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+    	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:48) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+    	at org.junit.platform.launcher.core.InterceptingLauncher.lambda$execute$0(InterceptingLauncher.java:41) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+    	at org.junit.platform.launcher.core.ClasspathAlignmentCheckingLauncherInterceptor.intercept(ClasspathAlignmentCheckingLauncherInterceptor.java:25) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+    	at org.junit.platform.launcher.core.InterceptingLauncher.execute(InterceptingLauncher.java:40) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+    	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:48) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+    	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestDefinitionProcessor$CollectThenExecuteTestDefinitionConsumer.processAllTestDefinitions(JUnitPlatformTestDefinitionProcessor.java:179) ~[na:na]
+    	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestDefinitionProcessor$CollectThenExecuteTestDefinitionConsumer.access$000(JUnitPlatformTestDefinitionProcessor.java:122) ~[na:na]
+    	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestDefinitionProcessor.stop(JUnitPlatformTestDefinitionProcessor.java:116) ~[na:na]
+    	at org.gradle.api.internal.tasks.testing.SuiteTestDefinitionProcessor.stop(SuiteTestDefinitionProcessor.java:63) ~[na:na]
+    	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+    	at org.gradle.internal.dispatch.MethodInvocation.invokeOn(MethodInvocation.java:77) ~[na:na]
+    	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:28) ~[na:na]
+    	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:19) ~[na:na]
+    	at org.gradle.internal.dispatch.ContextClassLoaderDispatch.dispatch(ContextClassLoaderDispatch.java:33) ~[na:na]
+    	at org.gradle.internal.dispatch.ProxyDispatchAdapter$DispatchingInvocationHandler.invoke(ProxyDispatchAdapter.java:88) ~[na:na]
+    	at jdk.proxy1/jdk.proxy1.$Proxy4.stop(Unknown Source) ~[na:na]
+    	at org.gradle.api.internal.tasks.testing.worker.TestWorker$3.run(TestWorker.java:195) ~[na:na]
+    	at org.gradle.api.internal.tasks.testing.worker.TestWorker.executeAndMaintainThreadName(TestWorker.java:126) ~[na:na]
+    	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:103) ~[na:na]
+    	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:63) ~[na:na]
+    	at org.gradle.process.internal.worker.child.ActionExecutionWorker.execute(ActionExecutionWorker.java:56) ~[na:na]
+    	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:122) ~[na:na]
+    	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:72) ~[na:na]
+    	at worker.org.gradle.process.internal.worker.GradleWorkerMain.run(GradleWorkerMain.java:69) ~[gradle-worker.jar:na]
+    	at worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74) ~[gradle-worker.jar:na]
+
+    2026-04-18T00:41:53.066+03:00  INFO 5360 --- [sdd-demo] [    Test worker] o.example.sdd.listener.BatchJobListener  : Batch complete — status: FAILED, inserted: 0, duplicates: 0, malformed: 0
+    2026-04-18T00:41:53.069+03:00  INFO 5360 --- [sdd-demo] [    Test worker] o.s.b.c.l.s.TaskExecutorJobLauncher      : Job: [SimpleJob: [name=importTemperatureJob]] completed with the following parameters: [{JobParameter{name='batch.random', value=364733792311474684, type=class java.lang.Long, identifying=true}}] and the following status: [FAILED] in 15ms
+
+MissingDirectoryIntegrationTest > testMissingDirectory() FAILED
+    java.lang.AssertionError: 
+    Expecting code to raise a throwable.
+        at org.example.sdd.MissingDirectoryIntegrationTest.testMissingDirectory(MissingDirectoryIntegrationTest.java:32)
+
+MissingDirectoryIntegrationTest STANDARD_OUT
+    2026-04-18T00:41:53.364+03:00  INFO 5360 --- [sdd-demo] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+    2026-04-18T00:41:53.433+03:00  INFO 5360 --- [sdd-demo] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+
+Gradle Test Executor 10 finished executing tests.
+
+> Task :test FAILED
+
+1 test completed, 1 failed
+Generating HTML test report...
+Finished generating test html results (0.044 secs) into: /Users/anton/IdeaProjects/sdd-demo/build/reports/tests/test
+Finished generating test XML results (0.006 secs) into: /Users/anton/IdeaProjects/sdd-demo/build/test-results/test
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':test'.
+> There were failing tests. See the report at: file:///Users/anton/IdeaProjects/sdd-demo/build/reports/tests/test/index.html
+
+* Try:
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+
+BUILD FAILED in 21s
+4 actionable tasks: 1 executed, 3 up-to-date
+Watched directory hierarchies: [/Users/anton/IdeaProjects/sdd-demo]
