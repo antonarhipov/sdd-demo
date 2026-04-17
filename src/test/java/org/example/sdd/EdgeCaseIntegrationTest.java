@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.job.JobExecution;
 import org.springframework.batch.core.step.StepExecution;
-import org.springframework.batch.test.JobLauncherTestUtils;
+import org.springframework.batch.test.JobOperatorTestUtils;
 import org.springframework.batch.test.context.SpringBatchTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class EdgeCaseIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
-    private JobLauncherTestUtils jobLauncherTestUtils;
+    private JobOperatorTestUtils jobOperatorTestUtils;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -48,7 +48,7 @@ class EdgeCaseIntegrationTest extends AbstractIntegrationTest {
     @Test
     void testHeaderOnlyCsv() throws Exception {
         System.setProperty("batch.input.dir", tempDir.toAbsolutePath().toString());
-        JobExecution jobExecution = jobLauncherTestUtils.launchJob();
+        JobExecution jobExecution = jobOperatorTestUtils.startJob();
         assertThat(jobExecution.getExitStatus()).isEqualTo(ExitStatus.COMPLETED);
         
         Integer count = jdbcTemplate.queryForObject("SELECT count(*) FROM temperature_records", Integer.class);
@@ -58,7 +58,7 @@ class EdgeCaseIntegrationTest extends AbstractIntegrationTest {
     @Test
     void testNoCsvFiles() throws Exception {
         System.setProperty("batch.input.dir", tempDir.resolve("empty_dir").toAbsolutePath().toString());
-        JobExecution jobExecution = jobLauncherTestUtils.launchJob();
+        JobExecution jobExecution = jobOperatorTestUtils.startJob();
         assertThat(jobExecution.getExitStatus()).isEqualTo(ExitStatus.COMPLETED);
         
         StepExecution stepExecution = jobExecution.getStepExecutions().iterator().next();
@@ -68,7 +68,7 @@ class EdgeCaseIntegrationTest extends AbstractIntegrationTest {
     @Test
     void testMissingDirectory() throws Exception {
         System.setProperty("batch.input.dir", tempDir.resolve("non_existent").toAbsolutePath().toString());
-        JobExecution jobExecution = jobLauncherTestUtils.launchJob();
+        JobExecution jobExecution = jobOperatorTestUtils.startJob();
         
         assertThat(jobExecution.getStatus().isUnsuccessful()).isTrue();
         assertThat(jobExecution.getAllFailureExceptions().get(0).getMessage())

@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.job.JobExecution;
 import org.springframework.batch.core.step.StepExecution;
-import org.springframework.batch.test.JobLauncherTestUtils;
+import org.springframework.batch.test.JobOperatorTestUtils;
 import org.springframework.batch.test.context.SpringBatchTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class CompositeKeyIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
-    private JobLauncherTestUtils jobLauncherTestUtils;
+    private JobOperatorTestUtils jobOperatorTestUtils;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -51,7 +51,7 @@ class CompositeKeyIntegrationTest extends AbstractIntegrationTest {
     @Test
     void testCompositeKey() throws Exception {
         // Act: Run the job
-        JobExecution jobExecution = jobLauncherTestUtils.launchJob();
+        JobExecution jobExecution = jobOperatorTestUtils.startJob();
 
         // Assert
         assertThat(jobExecution.getExitStatus()).isEqualTo(ExitStatus.COMPLETED);

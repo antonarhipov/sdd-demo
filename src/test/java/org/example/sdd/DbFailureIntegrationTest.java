@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.job.JobExecution;
-import org.springframework.batch.test.JobLauncherTestUtils;
+import org.springframework.batch.test.JobOperatorTestUtils;
 import org.springframework.batch.test.context.SpringBatchTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class DbFailureIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
-    private JobLauncherTestUtils jobLauncherTestUtils;
+    private JobOperatorTestUtils jobOperatorTestUtils;
 
     @TempDir
     static Path tempDir;
@@ -40,7 +40,7 @@ class DbFailureIntegrationTest extends AbstractIntegrationTest {
     @Test
     void testDbFailurePropagates() throws Exception {
         // Act
-        JobExecution jobExecution = jobLauncherTestUtils.launchJob();
+        JobExecution jobExecution = jobOperatorTestUtils.startJob();
         
         // Assert
         assertThat(jobExecution.getStatus()).isEqualTo(BatchStatus.FAILED);

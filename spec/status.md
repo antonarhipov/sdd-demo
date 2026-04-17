@@ -1,9 +1,9 @@
 # Implementation Status: CSV Temperature Data Import Batch Job
 
 ## Current Position
-- Phase: phase-5
-- Task: task-5.1
-- Status: IN_PROGRESS
+- Phase: phase-6
+- Task: task-6.1
+- Status: COMPLETE
 
 ## Progress
 
@@ -39,7 +39,7 @@
 
 ### Phase 5: Integration Tests
 | Task | Status | Notes |
-|------|--------|-------|
+------|--------|-------|
 | task-5.1 | ✓ COMPLETE | Created AbstractIntegrationTest using Testcontainers MySQL and verified context loads. |
 | task-5.2 | ✓ COMPLETE | Verified happy path with valid CSV; aggregated counts are correct. |
 | task-5.3 | ✓ COMPLETE | Verified duplicate detection against pre-seeded DB records. |
@@ -48,6 +48,11 @@
 | task-5.6 | ✓ COMPLETE | Verified that DB failure (data integrity violation) correctly fails the job. |
 | task-5.7 | ✓ COMPLETE | Verified that composite key (same name, diff datetime) allows both inserts. |
 
+### Phase 6: API Migration
+| Task | Status | Notes |
+------|--------|-------|
+| task-6.1 | ✓ COMPLETE | Migrated JobLauncherTestUtils to JobOperatorTestUtils across all tests; all tests passing. |
+
 ## Checkpoints
 | Phase | Status | Approved |
 |-------|--------|----------|
@@ -55,7 +60,8 @@
 | phase-2 | COMPLETE | ✓ |
 | phase-3 | COMPLETE | ✓ |
 | phase-4 | COMPLETE | ✓ |
-| phase-5 | COMPLETE | |
+| phase-5 | COMPLETE | ✓ |
+| phase-6 | COMPLETE | ✓ |
 
 ## Blockers
 <!-- empty if none -->

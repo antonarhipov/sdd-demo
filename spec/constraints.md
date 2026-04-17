@@ -83,7 +83,7 @@ These are project-wide rules that apply to all code in this repository.
 - SHOULD include tests for each edge case category: empty CSV (E1), no CSV files (E8), multiple files (E9), missing directory (E7)
 - SHOULD assert the console/log output of the summary report in at least one integration test; expected format: `Batch complete — status: COMPLETED, inserted: <N>, duplicates: <N>, malformed: <N>`
 - SHOULD include a test verifying that rows with the same `name` but different `datetime` values are both inserted — per AC-3.4
-- SHOULD use `@SpringBatchTest` or `JobLauncherTestUtils` to launch and assert Spring Batch jobs in tests
+- SHOULD use `@SpringBatchTest` or `JobOperatorTestUtils` to launch and assert Spring Batch jobs in tests
 - MUST NOT mock the database in integration tests — tests must exercise real SQL against the Testcontainers MySQL instance
 
 ### Error Handling
