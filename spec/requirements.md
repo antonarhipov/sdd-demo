@@ -73,17 +73,18 @@
 
 ### FR3 — Data Insertion
 - Insert non-duplicate records into the MySQL database via JDBC
-- The target table must store: `name` (VARCHAR), `datetime` (DATETIME), `temp` (DECIMAL(5,1))
+- The target table must store: `name` (VARCHAR(255)), `datetime` (DATETIME), `temp` (DECIMAL(5,1))
 
 ### FR4 — Error Handling
 - Malformed rows (unparseable `datetime`, non-numeric `temp`, missing required fields) are skipped
 - Each skipped row is logged with enough detail to identify the source row
 
 ### FR5 — Summary Report
-- On job completion, print to console:
-  - Total records inserted
-  - Total duplicates detected (and skipped)
-  - Total malformed rows skipped
+- On job completion (success or failure), print to console using the format:
+  `Batch complete — status: <STATUS>, inserted: <N>, duplicates: <N>, malformed: <N>`
+  where `<STATUS>` is `COMPLETED` or `FAILED`
+- If the job failed, partial counts accumulated up to the point of failure are reported
+- Output is produced by a `JobExecutionListener` writing via SLF4J at `INFO` level
 
 ### FR6 — Testing
 - Integration tests use **Testcontainers** with a real MySQL container

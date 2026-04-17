@@ -134,9 +134,9 @@ SHALL skip each malformed row individually, continue processing all remaining ro
 ## Category 6: Summary Report
 
 **AC-6.1 — Summary printed on completion**
-WHEN the batch job completes successfully
-THEN the job finishes execution
-SHALL print to the console the total number of records inserted, total duplicates detected and skipped, and total malformed rows skipped
+WHEN the batch job finishes execution (whether successful or failed)
+THEN the `JobExecutionListener.afterJob()` callback fires
+SHALL print to the console using the format `Batch complete — status: <STATUS>, inserted: <N>, duplicates: <N>, malformed: <N>`; if the job failed, partial counts accumulated up to the point of failure SHALL be reported alongside status `FAILED`
 
 **AC-6.2 — Summary covers all files**
 WHEN the input directory contains multiple CSV files
