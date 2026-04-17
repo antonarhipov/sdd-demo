@@ -1,8 +1,8 @@
 # Implementation Status: CSV Temperature Data Import Batch Job
 
 ## Current Position
-- Phase: phase-1
-- Task: checkpoint-1
+- Phase: phase-2
+- Task: checkpoint-2
 - Status: NOT_STARTED
 
 ## Progress
@@ -18,8 +18,8 @@
 ### Phase 2: Core Domain Model
 | Task | Status | Notes |
 |------|--------|-------|
-| task-2.1 | · NOT_STARTED | |
-| task-2.2 | · NOT_STARTED | |
+| task-2.1 | ✓ COMPLETE | Defined CsvRow as a Java record with raw String fields. |
+| task-2.2 | ✓ COMPLETE | Defined TemperatureRecord as a Java record with LocalDateTime and BigDecimal fields. |
 
 ### Phase 3: Batch Pipeline Components
 | Task | Status | Notes |
@@ -51,8 +51,8 @@
 ## Checkpoints
 | Phase | Status | Approved |
 |-------|--------|----------|
-| phase-1 | PENDING | |
-| phase-2 | NOT_REACHED | |
+| phase-1 | COMPLETE | ✓ |
+| phase-2 | PENDING | |
 | phase-3 | NOT_REACHED | |
 | phase-4 | NOT_REACHED | |
 | phase-5 | NOT_REACHED | |
