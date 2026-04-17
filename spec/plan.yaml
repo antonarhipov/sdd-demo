@@ -1,0 +1,314 @@
+plan:
+  name: "CSV Temperature Data Import Batch Job"
+  phases:
+
+    - id: phase-1
+      name: "Project Setup & Infrastructure"
+      description: "Create the Spring Boot project skeleton, configure build dependencies, database connectivity, and schema migrations."
+      tasks:
+        - id: task-1.1
+          name: "Initialize Spring Boot project with required dependencies"
+          description: >
+            Create a Maven or Gradle build file targeting Java 21 with the following
+            dependencies: spring-boot-starter-batch, spring-boot-starter-jdbc,
+            mysql-connector-j, flyway-core, testcontainers (mysql module),
+            spring-boot-starter-test. No JPA, Hibernate, or H2 dependencies.
+          artifact: "pom.xml or build.gradle"
+          depends_on: []
+          validation: "Project compiles without errors and all dependencies resolve via `./mvnw verify -DskipTests` or equivalent."
+
+        - id: task-1.2
+          name: "Configure application.properties"
+          description: >
+            Create src/main/resources/application.properties with:
+            batch.input.dir=data/input, MySQL datasource URL/credentials,
+            spring.batch.initialize-schema=always, and Flyway auto-configuration enabled.
+            No hardcoded credentials in Java source.
+          artifact: "src/main/resources/application.properties"
+          depends_on: [task-1.1]
+          validation: "Spring context loads and @Value(\"${batch.input.dir}\") is injectable without errors."
+
+        - id: task-1.3
+          name: "Create Flyway migration for temperature_records table"
+          description: >
+            Write V1__create_temperature_records.sql under
+            src/main/resources/db/migration creating the temperature_records table
+            with columns: name VARCHAR(255), datetime DATETIME, temp DECIMAL(5,1).
+            Include a named composite unique index on (name, datetime) as a
+            secondary database-level integrity guard.
+          artifact: "src/main/resources/db/migration/V1__create_temperature_records.sql"
+          depends_on: [task-1.1]
+          validation: "Flyway migration runs against a real MySQL instance and the table is present with correct column types and the composite index."
+
+        - id: task-1.4
+          name: "Set up package structure"
+          description: >
+            Create the root package (e.g., com.example.batch) and sub-packages:
+            model, config, batch, listener. Each sub-package directory must exist
+            and be importable.
+          artifact: "src/main/java/com/example/batch/ directory tree with sub-packages"
+          depends_on: [task-1.1]
+          validation: "Project compiles; all sub-packages exist under the root package."
+
+      checkpoint:
+        description: "Review project structure, build configuration, and database schema before implementing any business logic."
+        criteria:
+          - "Build file includes all required dependencies; JPA, Hibernate, and H2 are absent."
+          - "application.properties externalises batch.input.dir, DB URL, and all configurable values."
+          - "Flyway migration creates temperature_records with correct column types and composite unique index."
+          - "Package structure has dedicated sub-packages for model, config, batch, and listener."
+
+    - id: phase-2
+      name: "Core Domain Model"
+      description: "Define the Java records used as data-transfer objects throughout the pipeline."
+      tasks:
+        - id: task-2.1
+          name: "Create CsvRow record"
+          description: >
+            Define a Java record CsvRow(String name, String datetime, String temp)
+            in the model package to hold raw parsed CSV fields before type conversion.
+          artifact: "src/main/java/com/example/batch/model/CsvRow.java"
+          depends_on: [task-1.4]
+          validation: "Record compiles; name(), datetime(), and temp() accessor methods are present; no getters/setters."
+
+        - id: task-2.2
+          name: "Create TemperatureRecord record"
+          description: >
+            Define a Java record TemperatureRecord(String name, LocalDateTime datetime,
+            BigDecimal temp) in the model package to represent a validated,
+            type-converted row ready for database insertion.
+          artifact: "src/main/java/com/example/batch/model/TemperatureRecord.java"
+          depends_on: [task-1.4]
+          validation: "Record compiles; datetime field is java.time.LocalDateTime; temp field is java.math.BigDecimal."
+
+      checkpoint:
+        description: "Review domain model records before implementing pipeline components."
+        criteria:
+          - "Both records use Java record syntax (not classes with getters/setters)."
+          - "TemperatureRecord uses LocalDateTime for datetime and BigDecimal for temp."
+          - "No ORM annotations present on either record."
+
+    - id: phase-3
+      name: "Batch Pipeline Components"
+      description: "Implement the individual Spring Batch components: reader, processor, writer, and listeners."
+      tasks:
+        - id: task-3.1
+          name: "Implement MultiResourceItemReader for CSV files"
+          description: >
+            Create a Spring bean (class or @Bean method) that builds a
+            MultiResourceItemReader<CsvRow> wrapping a FlatFileItemReader.
+            Configure FlatFileItemReader with a DelimitedLineTokenizer and
+            BeanWrapperFieldSetMapper (or equivalent) mapped to CsvRow.
+            Inject batch.input.dir to discover all *.csv resources at startup.
+            Log a WARN if no .csv files are found. Must NOT use a manual
+            BufferedReader loop outside the Batch framework.
+          artifact: "src/main/java/com/example/batch/batch/CsvItemReader.java"
+          depends_on: [task-2.1, task-1.2]
+          validation: "Reader processes a sample CSV and returns a CsvRow per data row; extra columns are silently ignored; header row is not returned as data."
+
+        - id: task-3.2
+          name: "Implement ItemProcessor for parsing and validation"
+          description: >
+            Implement TemperatureItemProcessor implements
+            ItemProcessor<CsvRow, TemperatureRecord>.
+            Parse datetime (ISO 8601 String → LocalDateTime) and
+            temp (String → BigDecimal, 1 decimal place).
+            For missing required fields, unparseable datetime, or non-numeric temp:
+            return null (to signal skip) and log at WARN via SLF4J including
+            file name and row content/line number. Never throw for malformed input.
+          artifact: "src/main/java/com/example/batch/batch/TemperatureItemProcessor.java"
+          depends_on: [task-2.1, task-2.2]
+          validation: "Valid CsvRow produces a TemperatureRecord; each category of malformed input returns null and emits a WARN log; no System.out.println used."
+
+        - id: task-3.3
+          name: "Implement ItemWriter with per-item duplicate detection"
+          description: >
+            Implement TemperatureItemWriter implements ItemWriter<TemperatureRecord>.
+            For each item sequentially (one at a time, not batch-all-then-insert):
+            query the DB via JdbcTemplate for an existing (name, datetime) row;
+            if found, log at INFO/WARN and increment duplicate counter;
+            if not found, insert via JdbcTemplate and increment inserted counter.
+            Store both counters in the StepExecutionContext (via StepExecutionListener
+            or ChunkListener) for later retrieval by the JobExecutionListener.
+            Must NOT use UNIQUE constraint violation as the primary detection mechanism.
+          artifact: "src/main/java/com/example/batch/batch/TemperatureItemWriter.java"
+          depends_on: [task-2.2, task-1.3]
+          validation: "Unique records are inserted; intra-chunk duplicates are detected correctly; counters are accessible from execution context after the step."
+
+        - id: task-3.4
+          name: "Implement JobExecutionListener for directory validation and summary"
+          description: >
+            Implement BatchJobListener implements JobExecutionListener.
+            In beforeJob(): validate that the batch.input.dir path exists on the
+            filesystem; if not, throw a JobExecutionException with a descriptive
+            message so the job never enters STARTED state.
+            In afterJob(): read inserted, duplicate, and malformed counts from the
+            execution context and log at INFO via SLF4J:
+            "Batch complete — status: <STATUS>, inserted: <N>, duplicates: <N>, malformed: <N>".
+            Partial counts must be reported even if status is FAILED.
+          artifact: "src/main/java/com/example/batch/listener/BatchJobListener.java"
+          depends_on: [task-1.4]
+          validation: "beforeJob() prevents job start when directory is missing; afterJob() logs the exact required format; SLF4J INFO level used throughout."
+
+        - id: task-3.5
+          name: "Implement SkipListener to count malformed rows"
+          description: >
+            Implement MalformedRowSkipListener implements SkipListener<CsvRow, TemperatureRecord>.
+            In onSkipInProcess(), increment a malformed counter stored in the
+            StepExecutionContext so the BatchJobListener can read the total
+            malformed count in afterJob().
+          artifact: "src/main/java/com/example/batch/listener/MalformedRowSkipListener.java"
+          depends_on: [task-3.2]
+          validation: "Each skip event increments the malformed counter; count is retrievable from the step/job execution context after the step completes."
+
+      checkpoint:
+        description: "Review all pipeline components in isolation before wiring them together."
+        criteria:
+          - "Reader uses MultiResourceItemReader + FlatFileItemReader; no manual BufferedReader loops."
+          - "Processor returns null (not throws) for all malformed row categories; logs WARN with row context."
+          - "Writer checks DB before each insert sequentially; no UNIQUE constraint exception as primary mechanism."
+          - "JobExecutionListener validates directory in beforeJob(); prints exact summary format in afterJob() via SLF4J INFO."
+          - "SkipListener correctly accumulates malformed count in execution context."
+          - "No System.out.println in any component."
+
+    - id: phase-4
+      name: "Batch Job Configuration & Wiring"
+      description: "Assemble all components into a Spring Batch Job and Step with fault-tolerance, skip settings, and startup trigger."
+      tasks:
+        - id: task-4.1
+          name: "Create BatchJobConfig @Configuration class"
+          description: >
+            Create BatchJobConfig annotated with @Configuration.
+            Define a Job bean (using JobBuilder) and a Step bean (using StepBuilder)
+            wired with the CsvItemReader, TemperatureItemProcessor, and
+            TemperatureItemWriter. Use constructor injection for all dependencies.
+            Register BatchJobListener and MalformedRowSkipListener on the step/job.
+            Set a reasonable chunk size (e.g., 100).
+          artifact: "src/main/java/com/example/batch/config/BatchJobConfig.java"
+          depends_on: [task-3.1, task-3.2, task-3.3, task-3.4, task-3.5]
+          validation: "Spring application context loads with the Job bean present; application starts and automatically triggers the batch job."
+
+        - id: task-4.2
+          name: "Configure fault-tolerant skip behaviour"
+          description: >
+            Within the Step definition, add .faultTolerant().skip(Exception.class)
+            .skipLimit(Integer.MAX_VALUE) (or targeted exception subclasses for
+            parsing errors) and register the MalformedRowSkipListener.
+            Ensure DB-level failures (e.g., DataAccessException on insert) are
+            NOT skipped and propagate to fail the job.
+          artifact: "Updated BatchJobConfig.java (step builder chain)"
+          depends_on: [task-4.1]
+          validation: "A step containing malformed rows completes with COMPLETED status; DB connection failures still propagate as FAILED job status."
+
+        - id: task-4.3
+          name: "Verify startup trigger and no-files edge case"
+          description: >
+            Confirm spring.batch.job.enabled=true (or equivalent) is set so the
+            job runs automatically on Spring Boot startup.
+            Verify that when the input directory exists but contains no .csv files,
+            the MultiResourceItemReader is given an empty resource array, the step
+            produces 0 records, and the job completes with COMPLETED status while
+            logging a WARN about no files found.
+          artifact: "application.properties + CsvItemReader.java (no-files handling)"
+          depends_on: [task-4.1]
+          validation: "Application starts and job runs without manual invocation; empty-directory scenario completes with COMPLETED status and WARN log."
+
+      checkpoint:
+        description: "Review full job wiring, configuration, and startup behaviour before writing tests."
+        criteria:
+          - "Job and Step beans use constructor injection; no field injection."
+          - "Fault-tolerant skip allows malformed rows without aborting the step."
+          - "DB failures propagate and cause job status FAILED (not silently swallowed)."
+          - "Job triggers automatically on Spring Boot startup."
+          - "No hardcoded file paths, credentials, or table names in Java source."
+
+    - id: phase-5
+      name: "Integration Tests"
+      description: "Write integration tests using Testcontainers MySQL to verify all acceptance criteria categories."
+      tasks:
+        - id: task-5.1
+          name: "Create shared Testcontainers base test configuration"
+          description: >
+            Create an abstract base class (e.g., AbstractIntegrationTest) that starts
+            a MySQLContainer, configures the DataSource via @DynamicPropertySource,
+            and runs Flyway migrations before tests. Annotate with @SpringBootTest.
+            No H2 dependency anywhere in the test classpath.
+          artifact: "src/test/java/com/example/batch/AbstractIntegrationTest.java"
+          depends_on: [task-4.1, task-1.3]
+          validation: "Test context loads against a real MySQL Testcontainer; temperature_records table exists; no H2 on classpath."
+
+        - id: task-5.2
+          name: "Test happy path: valid CSV inserts all records"
+          description: >
+            Supply a CSV file with N valid, non-duplicate rows. Run the job via
+            JobLauncherTestUtils. Assert N records in the DB, job status COMPLETED,
+            and summary log matches exact format with inserted=N, duplicates=0,
+            malformed=0.
+          artifact: "src/test/java/com/example/batch/HappyPathIntegrationTest.java"
+          depends_on: [task-5.1]
+          validation: "Test passes; DB row count equals N; summary log line matches required format exactly."
+
+        - id: task-5.3
+          name: "Test duplicate detection against pre-seeded data"
+          description: >
+            Pre-seed the DB with K records. Supply a CSV containing those K rows
+            plus M new rows. Run the job. Assert M rows inserted, K duplicates counted,
+            no extra rows in DB, and job status COMPLETED.
+          artifact: "src/test/java/com/example/batch/DuplicateDetectionIntegrationTest.java"
+          depends_on: [task-5.1]
+          validation: "Test passes; DB row count = K + M; duplicate counter = K; inserted counter = M."
+
+        - id: task-5.4
+          name: "Test malformed row handling"
+          description: >
+            Supply a CSV with a mix of valid rows and rows containing: invalid
+            datetime format, non-numeric temp, and a missing required field.
+            Run the job. Assert only valid rows are in the DB, malformed counter
+            matches the number of bad rows, and job status is COMPLETED (not FAILED).
+          artifact: "src/test/java/com/example/batch/MalformedRowIntegrationTest.java"
+          depends_on: [task-5.1]
+          validation: "Test passes; invalid rows absent from DB; malformed count correct; job status COMPLETED."
+
+        - id: task-5.5
+          name: "Test edge cases: empty CSV, no files, missing directory"
+          description: >
+            Three scenarios in one or separate test methods:
+            (1) CSV with header only → 0 inserted, 0 duplicates, 0 malformed, COMPLETED.
+            (2) Directory with no .csv files → COMPLETED, all counts 0, WARN logged.
+            (3) Non-existent directory path → job fails before processing with
+            descriptive error (does not reach STARTED state).
+          artifact: "src/test/java/com/example/batch/EdgeCaseIntegrationTest.java"
+          depends_on: [task-5.1]
+          validation: "All three scenarios pass per AC-1.3, AC-1.4, and AC-5.4."
+
+        - id: task-5.6
+          name: "Test DB connection failure propagates as FAILED job"
+          description: >
+            Configure an invalid datasource URL (or stop the container mid-job) to
+            simulate a connection failure during batch insert. Run the job. Assert
+            job execution status is FAILED and Spring Batch metadata tables record
+            the failure. Assert no partial data is silently discarded.
+          artifact: "src/test/java/com/example/batch/DbFailureIntegrationTest.java"
+          depends_on: [task-5.1]
+          validation: "Test passes; JobExecution status is FAILED; failure entry present in Spring Batch metadata tables."
+
+        - id: task-5.7
+          name: "Test composite key: same name, different datetime both inserted"
+          description: >
+            Supply a CSV with two rows sharing the same name but different datetime
+            values. Run the job. Assert both rows are present in the DB and the
+            duplicate counter is 0 (per AC-3.4).
+          artifact: "src/test/java/com/example/batch/CompositeKeyIntegrationTest.java"
+          depends_on: [task-5.1]
+          validation: "Test passes; both rows present in DB; duplicate counter = 0."
+
+      checkpoint:
+        description: "Final review: confirm all acceptance criteria categories are covered and no H2 is present."
+        criteria:
+          - "All tests use Testcontainers MySQL; H2 is absent from the entire test classpath."
+          - "Duplicate detection test pre-seeds DB and verifies no extra rows inserted (AC-8.3)."
+          - "Malformed row test verifies COMPLETED status with correct counts (AC-8.4)."
+          - "Edge cases for empty CSV, no files, and missing directory all covered (AC-1.3, AC-1.4, AC-5.4)."
+          - "DB failure test verifies FAILED status recorded in Spring Batch metadata (AC-4.3)."
+          - "Composite key test verifies same-name rows with different datetimes are both inserted (AC-3.4)."
+          - "All AC categories 1–8 have at least one covering integration test."
