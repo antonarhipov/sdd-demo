@@ -57,21 +57,40 @@ public class TemperatureImportIntegrationTest {
 
     @AfterAll
     public static void afterAll() throws IOException {
-        if (Files.exists(inputDir)) {
-            try (var stream = Files.list(inputDir)) {
+        cleanupDir(Paths.get("target/test-input"));
+        cleanupDir(Paths.get("target/processed"));
+        cleanupDir(Paths.get("target/failed"));
+    }
+
+    @BeforeEach
+    public void setUp() throws IOException {
+        jdbcTemplate.execute("DELETE FROM temperature_reading");
+        
+        cleanupDir(Paths.get("target/test-input"));
+        cleanupDir(Paths.get("target/processed"));
+        cleanupDir(Paths.get("target/failed"));
+
+        Files.createDirectories(inputDir);
+        Path csvFile = inputDir.resolve("temperatures.csv");
+        Files.write(csvFile, List.of(
+            "name,datetime,temp",
+            "Alice,2026-06-09T10:00:00,23.5",
+            "Bob,2026-06-09T10:15:00,22.8",
+            "  ,2026-06-09T10:20:00,21.0"
+        ));
+    }
+
+    private static void cleanupDir(Path dir) throws IOException {
+        if (Files.exists(dir)) {
+            try (var stream = Files.list(dir)) {
                 stream.forEach(file -> {
                     try {
                         Files.delete(file);
                     } catch (IOException ignored) {}
                 });
             }
-            Files.delete(inputDir);
+            Files.delete(dir);
         }
-    }
-
-    @BeforeEach
-    public void setUp() {
-        jdbcTemplate.execute("DELETE FROM temperature_reading");
     }
 
     @Test

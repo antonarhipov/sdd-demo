@@ -46,7 +46,8 @@ public class TemperatureImportJobConfig {
     public Job temperatureImportJob() {
         List<Path> files = csvFileDiscoverer.discoverFiles();
         JobBuilder jobBuilder = new JobBuilder("temperatureImportJob", jobRepository)
-                .incrementer(new RunIdIncrementer());
+                .incrementer(new RunIdIncrementer())
+                .listener(new ImportSummaryListener(files));
 
         if (files.isEmpty()) {
             Step noOpStep = new StepBuilder("noOpStep", jobRepository)
@@ -55,8 +56,8 @@ public class TemperatureImportJobConfig {
             return jobBuilder.start(noOpStep).build();
         }
 
-        Step firstStep = null;
         FlowBuilder<Flow> flowBuilder = null;
+        Step lastDispositionStep = null;
 
         for (int i = 0; i < files.size(); i++) {
             Path file = files.get(i);
@@ -74,19 +75,20 @@ public class TemperatureImportJobConfig {
                     .listener(stepCountersListener)
                     .build();
 
-            if (i == 0) {
-                firstStep = step;
-                flowBuilder = new FlowBuilder<Flow>("importFlow_" + filename.replace('.', '_')).start(step);
-            } else {
-                flowBuilder.on("*").to(step);
-            }
-        }
-
-        if (firstStep == null) {
-            Step noOpStep = new StepBuilder("noOpStep", jobRepository)
-                    .tasklet((contribution, chunkContext) -> RepeatStatus.FINISHED, transactionManager)
+            String dispositionStepName = "dispositionStep_" + filename.replace('.', '_');
+            Step dispositionStep = new StepBuilder(dispositionStepName, jobRepository)
+                    .tasklet(new FileDispositionTasklet(file, stepName), transactionManager)
                     .build();
-            return jobBuilder.start(noOpStep).build();
+
+            if (i == 0) {
+                flowBuilder = new FlowBuilder<Flow>("importFlow_" + filename.replace('.', '_'))
+                        .start(step)
+                        .on("*").to(dispositionStep);
+            } else {
+                flowBuilder.from(lastDispositionStep).on("*").to(step)
+                        .on("*").to(dispositionStep);
+            }
+            lastDispositionStep = dispositionStep;
         }
 
         return jobBuilder.start(flowBuilder.build()).end().build();
