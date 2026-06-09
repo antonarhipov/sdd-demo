@@ -87,4 +87,41 @@ public class TemperatureImportIntegrationTest {
         assertNotNull(count);
         assertEquals(2, count);
     }
+
+    @Test
+    public void testJobCrossRunDuplicate() throws Exception {
+        // Seed database with Alice, which is present in temperatures.csv
+        jdbcTemplate.update(
+            "INSERT INTO temperature_reading (name, recorded_at, temperature) VALUES (?, ?, ?)",
+            "Alice", java.sql.Timestamp.valueOf("2026-06-09 10:00:00"), 23.5
+        );
+
+        JobParameters jobParameters = new JobParametersBuilder()
+                .addLong("run.id", System.currentTimeMillis() + 100)
+                .toJobParameters();
+
+        JobExecution jobExecution = jobOperator.start(temperatureImportJob, jobParameters);
+        assertEquals("COMPLETED", jobExecution.getStatus().toString());
+
+        // DB should have Alice and Bob (count = 2)
+        Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM temperature_reading", Integer.class);
+        assertNotNull(count);
+        assertEquals(2, count);
+
+        var stepExecutions = jobExecution.getStepExecutions();
+        assertFalse(stepExecutions.isEmpty());
+        
+        // Find the step execution for importStep_temperatures_csv
+        var stepExec = stepExecutions.stream()
+                .filter(se -> se.getStepName().equals("importStep_temperatures_csv"))
+                .findFirst()
+                .orElseThrow();
+                
+        var context = stepExec.getExecutionContext();
+        
+        // Bob is inserted (1), Alice is cross-run duplicate (1), blank row is malformed (1).
+        assertEquals(1, context.getInt("inserted"));
+        assertEquals(1, context.getInt("duplicates"));
+        assertEquals(1, context.getInt("malformed"));
+    }
 }

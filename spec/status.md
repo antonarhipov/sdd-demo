@@ -2,7 +2,7 @@
 
 ## Current
 
-- Task: cp-2
+- Task: cp-3
 - Status: PENDING
 
 ## Completed
@@ -15,11 +15,15 @@
 - task-2.3
 - task-2.4
 - task-2.5
+- task-3.1
+- task-3.2
+- task-3.3
 
 ## Phase Approvals
 
 - phase-1: APPROVED
-- phase-2: PENDING
+- phase-2: APPROVED
+- phase-3: PENDING
 
 ## Blockers
 
@@ -30,3 +34,4 @@
 - task-2.2: Built dynamic header resolving using `HeaderAwareLineMapper` returning placeholder rows for headers/blanks, thus bypassing the Spring Batch FlatFileItemReader early-EOF issue on skipped/empty lines.
 - task-2.4: Checked database connection URL to bypass `SUCCESS_NO_INFO` array elements under batch execution if `rewriteBatchedStatements=true` is present, falling back to safe per-row updates to keep counts observable.
 - task-2.5: Introduced a custom `JobParametersConverter` bean to dynamically inject a unique `run.id` based on `System.currentTimeMillis()` at every launch while relying fully on default auto-configured boot runner.
+- task-3.1: Cleared the `headerIndices` in `HeaderAwareLineMapper` when `lineNumber == 1` to prevent cross-run state leaks where the header is treated as a data row in subsequent job launches.

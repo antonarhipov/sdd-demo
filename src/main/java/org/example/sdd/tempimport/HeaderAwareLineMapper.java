@@ -19,6 +19,9 @@ public class HeaderAwareLineMapper implements LineMapper<TemperatureRow> {
 
     @Override
     public TemperatureRow mapLine(String line, int lineNumber) throws Exception {
+        if (lineNumber == 1) {
+            headerIndices.clear();
+        }
         if (line == null || line.trim().isEmpty()) {
             return new TemperatureRow(null, null, null, sourceFile, lineNumber);
         }

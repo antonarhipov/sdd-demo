@@ -113,4 +113,49 @@ public class TemperatureRowProcessorTest {
         assertEquals(0, stepCounters.getDuplicates());
         assertTrue(listAppender.list.isEmpty());
     }
+
+    @Test
+    public void testMalformedMissingDatetime() throws Exception {
+        TemperatureRow row = new TemperatureRow("Alice", "", "23.5", "test.csv", 2);
+        TemperatureReading reading = processor.process(row);
+
+        assertNull(reading);
+        assertEquals(1, stepCounters.getMalformed());
+
+        assertEquals(1, listAppender.list.size());
+        ILoggingEvent event = listAppender.list.get(0);
+        assertEquals(Level.WARN, event.getLevel());
+        String msg = event.getFormattedMessage();
+        assertTrue(msg.contains("test.csv") && msg.contains("2") && msg.contains("Missing or blank 'datetime' column"));
+    }
+
+    @Test
+    public void testMalformedMissingTemp() throws Exception {
+        TemperatureRow row = new TemperatureRow("Alice", "2026-06-09T10:00:00", "", "test.csv", 2);
+        TemperatureReading reading = processor.process(row);
+
+        assertNull(reading);
+        assertEquals(1, stepCounters.getMalformed());
+
+        assertEquals(1, listAppender.list.size());
+        ILoggingEvent event = listAppender.list.get(0);
+        assertEquals(Level.WARN, event.getLevel());
+        String msg = event.getFormattedMessage();
+        assertTrue(msg.contains("test.csv") && msg.contains("2") && msg.contains("Missing or blank 'temp' column"));
+    }
+
+    @Test
+    public void testMalformedUnparseableTemp() throws Exception {
+        TemperatureRow row = new TemperatureRow("Alice", "2026-06-09T10:00:00", "invalid-temp", "test.csv", 2);
+        TemperatureReading reading = processor.process(row);
+
+        assertNull(reading);
+        assertEquals(1, stepCounters.getMalformed());
+
+        assertEquals(1, listAppender.list.size());
+        ILoggingEvent event = listAppender.list.get(0);
+        assertEquals(Level.WARN, event.getLevel());
+        String msg = event.getFormattedMessage();
+        assertTrue(msg.contains("test.csv") && msg.contains("2") && msg.contains("Unparseable temperature value"));
+    }
 }
