@@ -1,0 +1,285 @@
+tasks:
+  feature: "Temperature CSV Import"
+  review_verdict: "PASS WITH CONDITIONS"
+  organizing_principle: "walking_skeleton"
+
+  assumptions:
+    - "rules.md already incorporates the review Fix Plan: RULE-3a (line-number stamping, 5-field TemperatureRow) addresses MAJOR-2, and RULE-19's MUST unit-test clause addresses MAJOR-1. Both are reflected here via dedicated tasks tagged source: review/MAJOR-N."
+    - "Every dependency rules.md relies on is already declared in pom.xml (spring-boot-starter-batch, -batch-jdbc, -flyway, flyway-mysql, mysql-connector-j, spring-boot-docker-compose, batch-test, testcontainers-mysql); no pom edits are needed except confirming H2 stays absent."
+    - "TestcontainersConfiguration already exposes MySQLContainer(mysql:latest) with @ServiceConnection, so integration tests reuse it rather than defining a new container."
+    - "java.version=25 in pom.xml is intentionally left untouched (RULE-18); source must stay Java 21-compatible."
+
+  decisions:
+    - id: dec-1
+      decision: "Use walking_skeleton as the organizing principle: ship a thin valid-row end-to-end slice (schema → discover → read → insert → boot launch) first, then thicken with duplicate/malformed classification, file disposition, summary, and tests."
+      reason: "Integration risk dominates this feature — the dynamic step-per-file job wiring, boot-time launch, and INSERT IGNORE affected-row semantics are the riskiest unknowns (Risk Hotspots 1, 3, 5). Proving the wiring end-to-end early de-risks everything downstream. The codebase is greenfield, so there is no existing architectural style to preserve."
+      alternatives: ["layered (data→domain→app→presentation): rejected, this is a batch job with no presentation layer and integration wiring is the real risk, not layer separation", "risk_first: partially adopted — the highest-risk wiring lands in the phase-2 skeleton — but a pure risk_first ordering would scatter cohesive read/write components"]
+    - id: dec-2
+      decision: "Treat MAJOR-2 (5-field TemperatureRow + LineMapper line-stamping) as its own foundation task (task-1.2 + task-2.2) rather than a late retrofit."
+      reason: "Risk Hotspot 2: the source (file, line) must flow reader → processor → writer. Getting the carrier record shape right before any consumer is written avoids a structural rework once the processor and writer exist."
+      alternatives: ["Add sourceFile/sourceLine later when AC-8 is implemented: rejected, would force changes across reader, processor, and writer at once"]
+    - id: dec-3
+      decision: "Drive integration tests via JobLauncherTestUtils with spring.batch.job.enabled=false in @TestPropertySource, while production keeps spring.batch.job.enabled=true (RULE-14)."
+      reason: "Risk Hotspot 5: a full @SpringBootTest context would otherwise fire the boot-time job against an unmanaged input dir. Disabling auto-launch in tests and launching explicitly gives each test control over its temp input directory."
+      alternatives: ["Let the boot job fire and assert post-hoc: rejected, races with test setup and is non-deterministic"]
+
+  phases:
+    - id: phase-1
+      name: "Foundation: schema, data carriers, configuration"
+      description: "Create the persistence schema, the Java record carriers (including the line-number-bearing TemperatureRow), and the input-directory property. No batch behavior yet — these are the artifacts every later phase depends on."
+      covers: [AC-6]
+      entry_criteria: "review.md verdict is PASS or PASS WITH CONDITIONS; spec/criteria.md/rules.md present."
+      tasks:
+        - id: task-1.1
+          name: "Flyway migration for temperature_reading"
+          description: "Add V1__create_temperature_reading.sql creating temperature_reading(name VARCHAR(255) NOT NULL, recorded_at DATETIME NOT NULL, temperature DOUBLE NOT NULL) with UNIQUE KEY uk_name_recorded_at (name, recorded_at)."
+          artifact: "src/main/resources/db/migration/V1__create_temperature_reading.sql"
+          covers:
+            acs: [AC-6]
+            rules: [RULE-7]
+          depends_on: []
+          complexity: "S"
+          validation: "Boot the app (or run an integration test); Flyway applies V1 and the table with its unique key exists in MySQL. Re-running the migration is a no-op."
+        - id: task-1.2
+          name: "Define record data carriers"
+          description: "Create the feature's record types under org.example.sdd.tempimport: TemperatureReading(String name, LocalDateTime recordedAt, double temperature); TemperatureRow(String name, String rawDatetime, String rawTemp, String sourceFile, int sourceLine); a NameRecordedAt key record; and a per-file counter aggregate record (inserted, duplicates, malformed). No POJOs or Lombok."
+          artifact: "Record classes in src/main/java/org/example/sdd/tempimport/"
+          covers:
+            acs: []
+            rules: [RULE-17, RULE-3a, RULE-18]
+          depends_on: []
+          complexity: "S"
+          validation: "Code compiles under Java 21-compatible syntax; TemperatureRow carries sourceFile and sourceLine fields; all carriers are records."
+          risk: "Hotspot 2 — TemperatureRow must ferry (sourceFile, sourceLine) reader→processor→writer so both AC-8 (processor) and RULE-8's cross-run branch (writer) can emit the RULE-9 WARN shape."
+          source: "review/MAJOR-2"
+        - id: task-1.3
+          name: "Input-directory configuration property"
+          description: "Bind app.import.input-dir (default ./data/input) via @ConfigurationProperties or @Value within the tempimport package. processed/ and failed/ are derived as siblings at use time, not separate properties."
+          artifact: "Configuration-properties holder in src/main/java/org/example/sdd/tempimport/"
+          covers:
+            acs: []
+            rules: [RULE-1]
+          depends_on: []
+          complexity: "S"
+          validation: "Property resolves to ./data/input by default and is overridable via application.properties or a test @TestPropertySource."
+      checkpoint:
+        id: cp-1
+        description: "Review schema and scaffolding before any batch wiring is built on top of it."
+        criteria:
+          - "Migration creates the table with the (name, recorded_at) unique key exactly as the spec's data model specifies."
+          - "TemperatureRow is a 5-field record including sourceFile and sourceLine; all carriers are records (RULE-17)."
+          - "Input-dir property defaults to ./data/input and is the only configuration surface exposed (RULE-1)."
+
+    - id: phase-2
+      name: "Walking skeleton: valid-row end-to-end import"
+      description: "Wire the thinnest end-to-end path: discover files, read with a header-aware line mapper, parse valid rows, INSERT IGNORE into MySQL, and launch the job once on boot with a fresh run.id. Duplicate/malformed WARNs and file disposition come in later phases."
+      covers: [AC-1, AC-2, AC-3, AC-4, AC-5, AC-10, AC-13, AC-15, AC-18]
+      entry_criteria: "Phase 1 complete and checkpoint cp-1 approved."
+      tasks:
+        - id: task-2.1
+          name: "CsvFileDiscoverer"
+          description: "Implement file discovery with Files.list(inputDir), filtering to regular files whose name matches *.csv case-insensitively (top level only), sorted with Comparator.naturalOrder(). An empty result yields no file steps (a no-op flow) so the job still completes successfully."
+          artifact: "CsvFileDiscoverer in src/main/java/org/example/sdd/tempimport/"
+          covers:
+            acs: [AC-1, AC-13]
+            rules: [RULE-15]
+          depends_on: [task-1.3]
+          complexity: "S"
+          validation: "Given a temp dir with mixed-case *.csv and non-csv files, returns only the csv files in ascending lexicographic order; given an empty dir, returns an empty list without error."
+        - id: task-2.2
+          name: "Header-aware LineMapper and FlatFileItemReader"
+          description: "Implement HeaderAwareLineMapper resolving name/datetime/temp columns by header name (case-insensitive, trimmed) on the first non-blank line, tolerating any column order and extra columns, and detecting a missing required header as a hard failure. Stamp sourceFile (no path) and 1-based sourceLine onto every emitted TemperatureRow (header = line 1, first data row = line 2). Wrap in a FlatFileItemReader<TemperatureRow>."
+          artifact: "HeaderAwareLineMapper and TemperatureCsvItemReader in src/main/java/org/example/sdd/tempimport/"
+          covers:
+            acs: [AC-2, AC-15]
+            rules: [RULE-3, RULE-3a]
+          depends_on: [task-1.2]
+          complexity: "M"
+          validation: "Reading a sample CSV maps columns by header regardless of order, ignores extras, and emits rows with correct sourceFile/sourceLine; a file missing a required header surfaces as a hard failure rather than silently mapping nulls."
+          risk: "Hotspot 2 — only the reader knows the line number; it must stamp sourceLine onto every row and nothing downstream may recompute it."
+          source: "review/MAJOR-2"
+        - id: task-2.3
+          name: "TemperatureRowProcessor: parse valid rows"
+          description: "Implement the processor's valid-row path: parse datetime with DateTimeFormatter.ofPattern(\"yyyy-MM-dd'T'HH:mm:ss\") and temp with Double.parseDouble (trimmed), producing a TemperatureReading. Wire the parse-failure branches to RULE-10 handling (implemented in phase 3) but keep the happy path working now."
+          artifact: "TemperatureRowProcessor in src/main/java/org/example/sdd/tempimport/"
+          covers:
+            acs: [AC-3, AC-4]
+            rules: [RULE-4, RULE-5]
+          depends_on: [task-1.2, task-2.2]
+          complexity: "M"
+          validation: "A well-formed row yields a TemperatureReading with the parsed LocalDateTime and double; the exact datetime pattern is used."
+        - id: task-2.4
+          name: "TemperatureReadingWriter: INSERT IGNORE"
+          description: "Implement the JdbcTemplate writer issuing INSERT IGNORE INTO temperature_reading (name, recorded_at, temperature) VALUES (?, ?, ?) per chunk, and derive inserted vs duplicates from per-row affected-row counts. Account for Connector/J batch return semantics (SUCCESS_NO_INFO) so counts stay observable."
+          artifact: "TemperatureReadingWriter in src/main/java/org/example/sdd/tempimport/"
+          covers:
+            acs: [AC-5]
+            rules: [RULE-6]
+          depends_on: [task-1.1, task-1.2]
+          complexity: "M"
+          validation: "Inserting distinct valid rows persists them and counts each as inserted; the writer's affected-row interpretation is verified against an actual MySQL (Testcontainers) writer test, not assumed."
+          risk: "Hotspot 1 — MySQL Connector/J executeBatch may return SUCCESS_NO_INFO (-2) for batched statements, making the per-row inserted/duplicate delta unobservable. Mitigate by per-row executes or inspecting getUpdateCount; confirm counts against a real MySQL."
+        - id: task-2.5
+          name: "Job config: step-per-file, boot launch, run.id"
+          description: "Implement TemperatureImportJobConfig: build one Step (Reader→Processor→Writer, chunk 1000) per discovered file at job-construction time, chain them so each file's step runs regardless of the previous outcome, add a run.id job parameter (System.currentTimeMillis() or equivalent), and rely on spring.batch.job.enabled=true with the auto-configured runner to launch once per boot. Address the bean-construction-time discovery concern."
+          artifact: "TemperatureImportJobConfig in src/main/java/org/example/sdd/tempimport/"
+          covers:
+            acs: [AC-10, AC-18]
+            rules: [RULE-11, RULE-14, RULE-20]
+          depends_on: [task-2.1, task-2.2, task-2.3, task-2.4]
+          complexity: "L"
+          validation: "Booting the app with one valid CSV present runs the job once and inserts its rows; a fresh JobInstance is produced each launch (distinct run.id). No custom SkipPolicy/RetryPolicy is introduced."
+          risk: "Hotspot 3 — Spring Boot constructs the Job bean once at startup, so per-launch file discovery + dynamic step assembly should be driven by a JobFactory/custom ApplicationRunner rather than registering file-shaped steps statically. Hotspot 5 — keep boot launch on for prod but ensure tests can disable it (see dec-3)."
+      checkpoint:
+        id: cp-2
+        description: "Verify the end-to-end skeleton: a valid CSV is discovered, read, parsed, and its rows inserted into MySQL on boot. This is the highest-value review point."
+        criteria:
+          - "Dropping a valid *.csv into the input dir and booting inserts its rows into temperature_reading."
+          - "The job builds one step per file and launches exactly once per boot with a fresh run.id."
+          - "Writer inserted/duplicate counts are confirmed correct against a real MySQL (Hotspot 1 resolved)."
+
+    - id: phase-3
+      name: "Duplicate and malformed-row classification"
+      description: "Thicken the processor and writer: detect intra-run duplicates with a per-step key set, count cross-run duplicates from the writer's affected-row delta, classify malformed rows, and emit the mandated WARN logs with the exact field shapes."
+      covers: [AC-7, AC-8, AC-9]
+      entry_criteria: "Phase 2 complete and checkpoint cp-2 approved; valid-row path proven end-to-end."
+      tasks:
+        - id: task-3.1
+          name: "Intra-run duplicate detection + WARN"
+          description: "In the processor, maintain a Set<NameRecordedAt> of keys accepted in the current step; on a repeat key, skip the row (return null), increment the duplicates counter, and emit one WARN before dropping it. Format the WARN with exactly name, datetime (ISO-8601), sourceFile (no path), 1-based sourceLine, at WARN level via a class-named SLF4J logger."
+          artifact: "Duplicate-detection logic in TemperatureRowProcessor"
+          covers:
+            acs: [AC-7, AC-8]
+            rules: [RULE-8, RULE-9]
+          depends_on: [task-2.3]
+          complexity: "M"
+          validation: "A second occurrence of the same (name, datetime) within a file is skipped, counted as duplicate (not malformed), and produces a WARN with the exact field order."
+        - id: task-3.2
+          name: "Cross-run duplicate counting + WARN from writer"
+          description: "For rows that pass the in-memory set but collide with an existing DB row (INSERT IGNORE affected=0), count them as duplicates from the writer's affected-row delta and emit the same RULE-9 WARN shape using the row's stamped sourceFile/sourceLine. Ensure writer and processor counters reconcile (the WARN log and counter MUST agree)."
+          artifact: "Cross-run duplicate handling in TemperatureReadingWriter"
+          covers:
+            acs: [AC-7]
+            rules: [RULE-6, RULE-8, RULE-9]
+          depends_on: [task-2.4, task-3.1]
+          complexity: "M"
+          validation: "Re-importing a row already in the DB increments duplicates (not inserted), emits a WARN with name/datetime/sourceFile/sourceLine, and leaves the existing DB row unchanged (no upsert)."
+          risk: "Hotspot 1 — depends on observable affected-row counts; reuse the batch-return mitigation from task-2.4."
+        - id: task-3.3
+          name: "Malformed-row classification + WARN"
+          description: "In the processor, classify a row as malformed when any required column is missing/blank, datetime is unparseable, or temp is unparseable: return null (filter from chunk), increment the malformed counter, and log one WARN containing sourceFile, sourceLine, and a human-readable reason. Never propagate the exception to abort the step; rely on processor filtering rather than a custom SkipPolicy."
+          artifact: "Malformed-row handling in TemperatureRowProcessor"
+          covers:
+            acs: [AC-9]
+            rules: [RULE-10, RULE-20]
+          depends_on: [task-2.3]
+          complexity: "M"
+          validation: "Rows with blank required fields, bad datetime, or bad temp are skipped, counted as malformed, and logged at WARN with file/line/reason; the step continues processing remaining rows; blank body lines are skipped silently (not counted)."
+      checkpoint:
+        id: cp-3
+        description: "Verify classification and logging before file disposition is added."
+        criteria:
+          - "Intra-run and cross-run duplicates are both counted and WARN-logged with the exact RULE-9 field order; duplicate counter and WARN count agree."
+          - "Malformed rows are skipped, counted, and WARN-logged with file/line/reason; the step does not abort."
+          - "No custom SkipPolicy/RetryPolicy was introduced (RULE-20)."
+
+    - id: phase-4
+      name: "File disposition and job summary"
+      description: "Add the post-step file move to processed/ or failed/ (creating dirs on demand), route hard failures (including missing header) so the file lands in failed/, and emit the single end-of-job INFO summary."
+      covers: [AC-11, AC-12, AC-14, AC-15, AC-16, AC-17]
+      entry_criteria: "Phase 3 complete and checkpoint cp-3 approved."
+      tasks:
+        - id: task-4.1
+          name: "FileDispositionTasklet"
+          description: "Implement a tasklet that runs after each file's chunk step and moves the source file with Files.move(..., ATOMIC_MOVE, REPLACE_EXISTING) to processed/ on success ExitStatus or failed/ otherwise, calling Files.createDirectories on the sibling destination immediately before the move. A header-only file (0 rows) processes successfully and moves to processed/."
+          artifact: "FileDispositionTasklet in src/main/java/org/example/sdd/tempimport/"
+          covers:
+            acs: [AC-11, AC-14, AC-17]
+            rules: [RULE-12]
+          depends_on: [task-2.5]
+          complexity: "M"
+          validation: "A successfully processed file (including a header-only file) lands in processed/; the destination directory is created on demand if absent."
+        - id: task-4.2
+          name: "Hard-failure ExitStatus routing"
+          description: "Wire each file step's ExitStatus so a missing required header, IO error, or mid-file DB exception ends that step as FAILED without throwing out of the job, causing the FileDispositionTasklet to move the file to failed/ and the next file's step to still run. A missing-header file inserts none of its rows."
+          artifact: "ExitStatus routing in TemperatureImportJobConfig + tasklet wiring"
+          covers:
+            acs: [AC-12, AC-15]
+            rules: [RULE-11, RULE-3a]
+          depends_on: [task-2.5, task-2.2, task-4.1]
+          complexity: "M"
+          validation: "A CSV missing a required header inserts nothing and is moved to failed/; the job continues to the next file and overall completes per Spring Batch semantics."
+        - id: task-4.3
+          name: "ImportSummaryListener (afterJob INFO summary)"
+          description: "Implement a single JobExecutionListener#afterJob that aggregates per-step counters from ExecutionContext and emits exactly one INFO log entry containing a per-file line for each step plus a grand-total line with inserted, duplicates, malformed, filesProcessed, and filesFailed. The summary MUST NOT be emitted anywhere else."
+          artifact: "ImportSummaryListener in src/main/java/org/example/sdd/tempimport/"
+          covers:
+            acs: [AC-16]
+            rules: [RULE-13]
+          depends_on: [task-2.5]
+          complexity: "M"
+          validation: "At job completion exactly one INFO entry is logged with per-file counts and grand totals of all five tallies; an empty input dir yields all-zero totals and no ERROR."
+      checkpoint:
+        id: cp-4
+        description: "Verify disposition and summary before the test phase; covers an irreversible step (file moves)."
+        criteria:
+          - "Successful files (incl. header-only) move to processed/; hard-failed files (incl. missing header) move to failed/ and the job continues."
+          - "Sibling processed/ and failed/ directories are created on demand."
+          - "Exactly one INFO summary is emitted from afterJob with per-file counts and the five grand totals."
+
+    - id: phase-5
+      name: "Test coverage and persistence invariants"
+      description: "Establish the testing pyramid mandated by RULE-19: context-free unit tests for the LineMapper and processor, Testcontainers-backed integration tests for the file-disposition branches, and confirmation that H2 is absent and MySQL is the only persistence."
+      covers: [AC-2, AC-7, AC-8, AC-9, AC-10, AC-11, AC-12, AC-13, AC-14, AC-15, AC-16, AC-17, AC-19]
+      entry_criteria: "Phase 4 complete and checkpoint cp-4 approved; all production behavior implemented."
+      tasks:
+        - id: task-5.1
+          name: "Unit tests: HeaderAwareLineMapper"
+          description: "Context-free JUnit tests (no Spring context, no Testcontainers) for the line mapper: header lookup by name with case-insensitive trimmed match, tolerance of any column order and extra columns, missing-header detection as a hard failure, and correct sourceFile / 1-based sourceLine stamping on every emitted TemperatureRow."
+          artifact: "src/test/java/org/example/sdd/tempimport/HeaderAwareLineMapperTest.java"
+          covers:
+            acs: [AC-2, AC-15]
+            rules: [RULE-19]
+          depends_on: [task-2.2]
+          complexity: "M"
+          validation: "Tests pass and load no Spring context; sourceLine stamping (header=1, first data row=2) is asserted."
+          source: "review/MAJOR-1"
+        - id: task-5.2
+          name: "Unit tests: TemperatureRowProcessor"
+          description: "Context-free JUnit tests for the processor: intra-run duplicate detection against the per-step Set<NameRecordedAt> (second occurrence returns null, duplicates counter incremented); malformed classification for missing/blank columns, unparseable datetime, and unparseable temp (malformed counter incremented, returns null, does not throw); and WARN-log assertions (via log appender/capturing logger) verifying field order name,datetime,sourceFile,sourceLine for duplicates and sourceFile,sourceLine,reason for malformed."
+          artifact: "src/test/java/org/example/sdd/tempimport/TemperatureRowProcessorTest.java"
+          covers:
+            acs: [AC-7, AC-8, AC-9]
+            rules: [RULE-19]
+          depends_on: [task-3.1, task-3.3]
+          complexity: "M"
+          validation: "Tests pass with no Spring context and no Testcontainers; WARN field order is asserted exactly. These unit tests are the primary coverage for AC-7/AC-8/AC-9 (integration tests must not be the only coverage)."
+          source: "review/MAJOR-1"
+        - id: task-5.3
+          name: "Integration tests: Testcontainers @SpringBatchTest branches"
+          description: "Testcontainers-backed @SpringBatchTest tests (one per branch: success move, hard-failure move, missing-header failure, empty directory, header-only file, summary-log assertion, on-demand directory creation), each using a temp directory as app.import.input-dir. Reuse the existing TestcontainersConfiguration (mysql:latest, @ServiceConnection). Set spring.batch.job.enabled=false and drive the job via JobLauncherTestUtils."
+          artifact: "src/test/java/org/example/sdd/tempimport/TemperatureImportIntegrationTest.java (and siblings)"
+          covers:
+            acs: [AC-10, AC-11, AC-12, AC-13, AC-14, AC-15, AC-16, AC-17]
+            rules: [RULE-19, RULE-16]
+          depends_on: [task-4.1, task-4.2, task-4.3]
+          complexity: "L"
+          validation: "All branch tests pass against MySQL Testcontainers; each uses an isolated temp input dir; the boot-time job does not fire during tests (dec-3)."
+          risk: "Hotspot 5 — tests must pin spring.batch.job.enabled=false and launch explicitly so the boot runner does not touch an unmanaged input dir."
+        - id: task-5.4
+          name: "Verify MySQL-only / no-H2 invariant"
+          description: "Confirm H2 (com.h2database:h2) and any embedded DB are absent from pom.xml in every scope and from all test profiles, and that integration tests obtain MySQL solely via TestcontainersConfiguration. No new third-party dependencies were added for this feature."
+          artifact: "Verification note + (if needed) pom.xml/test-profile confirmation"
+          covers:
+            acs: [AC-19]
+            rules: [RULE-16, RULE-2]
+          depends_on: []
+          complexity: "S"
+          validation: "Dependency tree contains no h2/embedded DB; all DB-backed tests run on mysql:latest via Testcontainers; pom.xml has no feature-added dependencies."
+      checkpoint:
+        id: cp-5
+        description: "Final review: full test suite green and persistence invariants confirmed."
+        criteria:
+          - "Unit tests (LineMapper, Processor) pass without loading a Spring context or Testcontainers and are the primary coverage for AC-7/AC-8/AC-9."
+          - "All Testcontainers integration branches pass on mysql:latest."
+          - "No H2 / embedded DB anywhere; no new dependencies added (RULE-2, RULE-16)."
