@@ -18,7 +18,7 @@ Links: [spec/spec.md](spec.md), [spec/criteria.md](criteria.md), [spec/proposal.
 - `TemperatureReadingWriter` — `INSERT IGNORE` via `JdbcTemplate`, derives `inserted` vs `duplicates` from affected-row counts; cross-run duplicates that survive the in-memory check are logged from the writer.
 - `FileDispositionTasklet` — moves the source file to `processed/` or `failed/` based on the step's `ExitStatus`, creating the directory on demand.
 - `ImportSummaryListener` — `JobExecutionListener#afterJob`; aggregates per-step counters from `ExecutionContext` and logs the single INFO summary.
-- `TemperatureReading` (record) — `(String name, LocalDateTime recordedAt, double temperature)`; `TemperatureRow` (record) — raw CSV-shape carrier used between reader and processor.
+- `TemperatureReading` (record) — `(String name, LocalDateTime recordedAt, double temperature)`; `TemperatureRow` (record) — `(String name, String rawDatetime, String rawTemp, String sourceFile, int sourceLine)`, the raw CSV-shape carrier populated by the custom `LineMapper` between reader and processor; `sourceFile` and `sourceLine` are stamped on every emitted row so the processor (AC-8) and the writer (cross-run duplicate branch of RULE-8) can both produce the WARN-log fields mandated by RULE-9.
 
 **Boundaries:** the package exposes only the `@Bean Job` and the `app.import.input-dir` property; parser internals, counters, and SQL stay package-private.
 
@@ -46,6 +46,11 @@ There is no `AGENTS.md`/`CLAUDE.md`/`GEMINI.md` and no existing source beyond `S
 **Covers:** AC-2, AC-3, AC-4
 **MUST** read CSV files with Spring Batch `FlatFileItemReader<TemperatureRow>` configured with a custom `LineMapper` that resolves the `name`, `datetime`, and `temp` columns by header name (case-insensitive, trimmed) on the first non-blank line of each file, supporting any column order and ignoring extra columns.
 **Reason:** Locks in the Ecosystem Survey outcome and makes AC-2 validatable by reading the reader configuration.
+
+### RULE-3a
+**Covers:** AC-2, AC-7, AC-8
+**MUST** make the custom `LineMapper` capture the source file name (no path) and the 1-based source line number of the current record and stamp them onto every emitted `TemperatureRow` as the `sourceFile` and `sourceLine` fields; **MUST** treat the header row as line 1 so that the first data row is line 2; **MUST NOT** drop or recompute these values downstream of the reader.
+**Reason:** RULE-9 fixes the duplicate WARN-log shape to `(name, datetime, sourceFile, sourceLine)`; only the reader knows the line number, so the carrier record has to ferry it to both the processor (intra-run duplicates) and the writer (cross-run duplicates surviving the in-memory check).
 
 ### RULE-4
 **Covers:** AC-3
@@ -123,9 +128,13 @@ There is no `AGENTS.md`/`CLAUDE.md`/`GEMINI.md` and no existing source beyond `S
 **Reason:** Honors the spec's "Java 21-compatible APIs/syntax" decision without churning the build.
 
 ### RULE-19
-**Covers:** AC-10, AC-11, AC-12, AC-13, AC-14, AC-15, AC-16, AC-17
-**MUST** provide at least one Testcontainers-backed `@SpringBatchTest` integration test per branch listed in this rule (success move, hard-failure move, missing-header failure, empty directory, header-only file, summary log assertion, on-demand directory creation), each using a temp directory as `app.import.input-dir`; unit tests **MAY** cover the processor and line mapper in isolation without Spring context.
-**Reason:** Concretises the testing pyramid for this feature so coverage is checkable from the test sources.
+**Covers:** AC-2, AC-7, AC-8, AC-9, AC-10, AC-11, AC-12, AC-13, AC-14, AC-15, AC-16, AC-17
+**MUST** provide at least one Testcontainers-backed `@SpringBatchTest` integration test per branch listed in this rule (success move, hard-failure move, missing-header failure, empty directory, header-only file, summary log assertion, on-demand directory creation), each using a temp directory as `app.import.input-dir`. In addition, **MUST** provide context-free JUnit unit tests covering:
+- the `LineMapper` (RULE-3, RULE-3a): header lookup by name with case-insensitive trimmed match, tolerance of any column order and extra columns, missing-header detection as a hard failure, and correct `sourceFile`/1-based `sourceLine` stamping on every emitted `TemperatureRow` (AC-2, AC-15);
+- the `TemperatureRowProcessor` (RULE-8, RULE-9, RULE-10): intra-run duplicate detection against the per-step `Set<NameRecordedAt>` returning `null` for the second occurrence and incrementing the `duplicates` counter (AC-7); malformed-row classification for missing/blank required columns, unparseable `datetime`, and unparseable `temp`, with the `malformed` counter incremented and the processor returning `null` rather than throwing (AC-9); and per-row WARN log assertions (via a log appender or capturing logger) verifying the exact field order `name, datetime, sourceFile, sourceLine` for duplicates (AC-8) and `sourceFile, sourceLine, reason` for malformed rows (AC-9).
+
+Unit tests **MUST NOT** load a Spring context and **MUST NOT** depend on Testcontainers; integration tests **MUST NOT** be used as the only coverage for AC-7, AC-8, or AC-9.
+**Reason:** Concretises the testing pyramid for this feature so coverage is checkable from the test sources; pins the row-level event-driven and unwanted-behavior ACs (AC-7/AC-8/AC-9) to fast unit tests where the WARN shape and counters are mechanically assertable, while leaving file-disposition branches on the Testcontainers tier.
 
 ### RULE-20
 **Covers:** project-wide
@@ -137,20 +146,20 @@ There is no `AGENTS.md`/`CLAUDE.md`/`GEMINI.md` and no existing source beyond `S
 | AC    | Rules                              |
 |-------|------------------------------------|
 | AC-1  | RULE-15                            |
-| AC-2  | RULE-3                             |
+| AC-2  | RULE-3, RULE-3a, RULE-19           |
 | AC-3  | RULE-3, RULE-4                     |
 | AC-4  | RULE-3, RULE-5                     |
 | AC-5  | RULE-6                             |
 | AC-6  | RULE-6, RULE-7                     |
-| AC-7  | RULE-8                             |
-| AC-8  | RULE-8, RULE-9                     |
-| AC-9  | RULE-10                            |
+| AC-7  | RULE-8, RULE-3a, RULE-19           |
+| AC-8  | RULE-8, RULE-9, RULE-3a, RULE-19   |
+| AC-9  | RULE-10, RULE-19                   |
 | AC-10 | RULE-11, RULE-19                   |
 | AC-11 | RULE-12, RULE-19                   |
 | AC-12 | RULE-11, RULE-12, RULE-19          |
 | AC-13 | RULE-15, RULE-19                   |
 | AC-14 | RULE-19                            |
-| AC-15 | RULE-11, RULE-19                   |
+| AC-15 | RULE-11, RULE-3a, RULE-19          |
 | AC-16 | RULE-13, RULE-19                   |
 | AC-17 | RULE-12, RULE-19                   |
 | AC-18 | RULE-14                            |
