@@ -108,6 +108,26 @@ public class TemperatureImportIntegrationTest {
     }
 
     @Test
+    public void testSuccessMoveAndOnDemandDirectoryCreation() throws Exception {
+        // Ensure target/processed and target/failed do not exist
+        cleanupDir(Paths.get("target/processed"));
+        cleanupDir(Paths.get("target/failed"));
+        assertFalse(Files.exists(Paths.get("target/processed")));
+
+        JobParameters jobParameters = new JobParametersBuilder()
+                .addLong("run.id", System.currentTimeMillis() + 200)
+                .toJobParameters();
+
+        JobExecution jobExecution = jobOperator.start(temperatureImportJob, jobParameters);
+        assertEquals("COMPLETED", jobExecution.getStatus().toString());
+
+        // Verify file moved to processed/
+        assertFalse(Files.exists(inputDir.resolve("temperatures.csv")));
+        assertTrue(Files.exists(Paths.get("target/processed/temperatures.csv")));
+        assertFalse(Files.exists(Paths.get("target/failed/temperatures.csv")));
+    }
+
+    @Test
     public void testJobCrossRunDuplicate() throws Exception {
         // Seed database with Alice, which is present in temperatures.csv
         jdbcTemplate.update(

@@ -49,4 +49,20 @@ public class HeaderAwareLineMapperTest {
         assertNull(blankRow.rawTemp());
         assertEquals(1, blankRow.sourceLine());
     }
+
+    @Test
+    public void testStateClearedOnLineNumberOne() throws Exception {
+        HeaderAwareLineMapper mapper = new HeaderAwareLineMapper("test.csv");
+
+        // Parse a valid header and a data row
+        mapper.mapLine("name,datetime,temp", 1);
+        TemperatureRow dataRow = mapper.mapLine("Alice,2026-06-09T10:00:00,23.5", 2);
+        assertEquals("Alice", dataRow.name());
+
+        // Re-parse with lineNumber == 1 to simulate a new file or run
+        mapper.mapLine("temp,datetime,name", 1);
+        TemperatureRow dataRow2 = mapper.mapLine("25.0,2026-06-09T11:00:00,Bob", 2);
+        assertEquals("Bob", dataRow2.name());
+        assertEquals("25.0", dataRow2.rawTemp());
+    }
 }

@@ -63,9 +63,7 @@ public class TemperatureRowProcessorTest {
         assertEquals(1, listAppender.list.size());
         ILoggingEvent event = listAppender.list.get(0);
         assertEquals(Level.WARN, event.getLevel());
-        assertTrue(event.getFormattedMessage().contains("test.csv"));
-        assertTrue(event.getFormattedMessage().contains("2"));
-        assertTrue(event.getFormattedMessage().contains("Missing or blank 'name' column"));
+        assertEquals("Malformed record: test.csv, 2, Missing or blank 'name' column", event.getFormattedMessage());
     }
 
     @Test
@@ -80,8 +78,7 @@ public class TemperatureRowProcessorTest {
         ILoggingEvent event = listAppender.list.get(0);
         assertEquals(Level.WARN, event.getLevel());
         // Verify field order: sourceFile, sourceLine, reason
-        String msg = event.getFormattedMessage();
-        assertTrue(msg.contains("test.csv") && msg.contains("3") && msg.contains("Unparseable datetime"));
+        assertEquals("Malformed record: test.csv, 3, Unparseable datetime value: invalid-date", event.getFormattedMessage());
     }
 
     @Test
@@ -99,8 +96,7 @@ public class TemperatureRowProcessorTest {
         ILoggingEvent event = listAppender.list.get(0);
         assertEquals(Level.WARN, event.getLevel());
         // Verify field order: name, datetime, sourceFile, sourceLine
-        String msg = event.getFormattedMessage();
-        assertTrue(msg.contains("Alice") && msg.contains("2026-06-09T10:00:00") && msg.contains("test.csv") && msg.contains("3"));
+        assertEquals("Duplicate record: Alice, 2026-06-09T10:00:00, test.csv, 3", event.getFormattedMessage());
     }
 
     @Test
@@ -125,8 +121,7 @@ public class TemperatureRowProcessorTest {
         assertEquals(1, listAppender.list.size());
         ILoggingEvent event = listAppender.list.get(0);
         assertEquals(Level.WARN, event.getLevel());
-        String msg = event.getFormattedMessage();
-        assertTrue(msg.contains("test.csv") && msg.contains("2") && msg.contains("Missing or blank 'datetime' column"));
+        assertEquals("Malformed record: test.csv, 2, Missing or blank 'datetime' column", event.getFormattedMessage());
     }
 
     @Test
@@ -140,8 +135,7 @@ public class TemperatureRowProcessorTest {
         assertEquals(1, listAppender.list.size());
         ILoggingEvent event = listAppender.list.get(0);
         assertEquals(Level.WARN, event.getLevel());
-        String msg = event.getFormattedMessage();
-        assertTrue(msg.contains("test.csv") && msg.contains("2") && msg.contains("Missing or blank 'temp' column"));
+        assertEquals("Malformed record: test.csv, 2, Missing or blank 'temp' column", event.getFormattedMessage());
     }
 
     @Test
@@ -155,7 +149,6 @@ public class TemperatureRowProcessorTest {
         assertEquals(1, listAppender.list.size());
         ILoggingEvent event = listAppender.list.get(0);
         assertEquals(Level.WARN, event.getLevel());
-        String msg = event.getFormattedMessage();
-        assertTrue(msg.contains("test.csv") && msg.contains("2") && msg.contains("Unparseable temperature value"));
+        assertEquals("Malformed record: test.csv, 2, Unparseable temperature value: invalid-temp", event.getFormattedMessage());
     }
 }
