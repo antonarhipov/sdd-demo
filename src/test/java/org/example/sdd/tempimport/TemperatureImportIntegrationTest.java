@@ -9,7 +9,7 @@ import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.JobExecution;
 import org.springframework.batch.core.job.parameters.JobParameters;
 import org.springframework.batch.core.job.parameters.JobParametersBuilder;
-import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -35,7 +35,7 @@ public class TemperatureImportIntegrationTest {
     private static final Path inputDir = Paths.get("target/test-input");
 
     @Autowired
-    private JobLauncher jobLauncher;
+    private JobOperator jobOperator;
 
     @Autowired
     private Job temperatureImportJob;
@@ -80,7 +80,7 @@ public class TemperatureImportIntegrationTest {
                 .addLong("run.id", System.currentTimeMillis())
                 .toJobParameters();
 
-        JobExecution jobExecution = jobLauncher.run(temperatureImportJob, jobParameters);
+        JobExecution jobExecution = jobOperator.start(temperatureImportJob, jobParameters);
         assertEquals("COMPLETED", jobExecution.getStatus().toString());
 
         Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM temperature_reading", Integer.class);

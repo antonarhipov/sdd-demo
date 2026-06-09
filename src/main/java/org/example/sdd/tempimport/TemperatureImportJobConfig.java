@@ -66,7 +66,8 @@ public class TemperatureImportJobConfig {
             TemperatureCsvItemReader reader = new TemperatureCsvItemReader(new FileSystemResource(file));
 
             Step step = new StepBuilder(stepName, jobRepository)
-                    .<TemperatureRow, TemperatureReading>chunk(1000, transactionManager)
+                    .<TemperatureRow, TemperatureReading>chunk(1000)
+                    .transactionManager(transactionManager)
                     .reader(reader)
                     .processor(processor)
                     .writer(writer)
