@@ -7,7 +7,7 @@ description: Generate an implementation task list from validated spec artifacts
 
 Translate a validated spec into an ordered, atomic, AC-traceable execution list an implementing agent can run task by task.
 
-Pipeline position: proposal → spec → rules → review → **tasks** -> execute
+Pipeline position: proposal → spec → criteria → rules → review → **tasks** -> execute
 
 # Role
 

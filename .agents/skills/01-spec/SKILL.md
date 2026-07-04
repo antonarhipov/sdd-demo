@@ -7,7 +7,7 @@ description: Interview the user one question at a time, walking the decision tre
 
 Walk down the decision tree, surfacing ambiguities, missing info, implicit assumptions, and edge cases through one-at-a-time questioning until the spec is implementable.
 
-Pipeline position: proposal → **spec** → criteria → rules → review → plan
+Pipeline position: proposal → **spec** → criteria → rules → review → tasks
 
 # Role
 

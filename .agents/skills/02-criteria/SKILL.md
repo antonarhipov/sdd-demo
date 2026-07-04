@@ -7,7 +7,7 @@ description: Translate the spec into a complete, traceable set of acceptance cri
 
 Translate the resolved spec into acceptance criteria using EARS templates.
 
-Pipeline position: proposal → spec → **criteria** → rules → review → plan
+Pipeline position: proposal → spec → **criteria** → rules → review → tasks
 
 # Role
 

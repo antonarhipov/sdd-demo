@@ -7,7 +7,7 @@ description: Stress-test the spec pipeline outputs against each other and the co
 
 Stress-test the spec pipeline against itself and the codebase. Surface anything that would cause an implementing agent to fail or build the wrong thing. Trust upstream's self-verification by default; investigate the seams.
 
-Pipeline position: proposal → spec → criteria → rules → **review** → plan
+Pipeline position: proposal → spec → criteria → rules → **review** → tasks
 
 # Role
 
